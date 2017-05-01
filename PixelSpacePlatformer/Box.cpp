@@ -279,3 +279,32 @@ void Box::resolveColision(Box & other, Point & movement, bool &headHit)
 	}
 	movement.set(xShift, yShift);
 }
+
+bool Box::checkLineIntersection(Point a, Point b)
+{
+	for (int i = 0; i < 4; i++) {
+		Point c = points[i];
+		Point d;
+		if (i == 3) {
+			d = points[0];
+		}
+		else {
+			d = points[i + 1];
+		}
+		double
+			s1_x = b.getX() - a.getX(),
+			s1_y = b.getY() - a.getY(),
+
+			s2_x = d.getX() - c.getX(),
+			s2_y = d.getX() - c.getX(),
+			s = (-s1_y * (a.getX() - c.getX()) + s1_x * (a.getY() - c.getY())) / (-s2_x * s1_y + s1_x * s2_y),
+			t = (s2_x * (a.getY() - c.getY()) - s2_y * (a.getX() - c.getX())) / (-s2_x * s1_y + s1_x * s2_y);
+
+		if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
+		{
+			return true;
+		}
+	}
+		return false;
+
+}

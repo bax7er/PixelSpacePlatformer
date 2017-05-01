@@ -3,33 +3,43 @@
 double AiPlayer::clock = 0;
 Point AiPlayer::react(float fOffest,Player player)
 {
+	double xDif = this->basicBox.getXmid() - player.basicBox.getXmid();
+	double yDif = this->basicBox.getYmid() - player.basicBox.getYmid();
+	double distance = sqrt((xDif*xDif) + (yDif*yDif));
+	
 	bool falling = false;
 	if (!onGround) {
 		printf("AI IS FALLING \n");
 		falling = true;
 		//return Point(0, -0.01*fOffest);
 	}
-	if (player.basicBox.getXmin() < this->basicBox.getXmin()) {
-		faceLeft = true;
-		this->animationUpdate(false);
-		if (!falling)
-		{
-			return Point(-0.003*fOffest, 0);
+	if (distance < 2) {
+		if (player.basicBox.getXmin() < this->basicBox.getXmin()) {
+			faceLeft = true;
+			this->animationUpdate(false);
+			if (!falling)
+			{
+				return Point(-0.003*fOffest, 0);
+			}
+			else {
+				return Point(-0.003*fOffest, -0.01*fOffest);
+			}
+		}
+		if (player.basicBox.getXmax() >= this->basicBox.getXmax()) {
+			faceLeft = false;
+			this->animationUpdate(false);
+			if (!falling)
+				return Point(0.003*fOffest, 0);
+			else
+				return Point(0.003*fOffest, -0.01*fOffest);
 		}
 		else {
-			return Point(-0.003*fOffest, -0.01*fOffest);
+			this->animationUpdate(true);
 		}
 	}
-	if (player.basicBox.getXmax() >= this->basicBox.getXmax()) {
-		faceLeft = false;
-		this->animationUpdate(false);
-		if (!falling)
-			return Point(0.003*fOffest, 0);
-		else
-			return Point(0.003*fOffest, -0.01*fOffest);
-	}
-	else {
-		this->animationUpdate(true);
+	if  (falling)
+	{
+	return Point(0, -0.01*fOffest);
 	}
 	return Point(0, 0);
 }
@@ -186,7 +196,6 @@ bool AiPlayer::checkOnTop(GameObject & player)
 		float terrainTop = this->basicBox.getYmax();
 		if ((boxbottom - terrainTop < 0.01) && (boxbottom - terrainTop > 0)) {
 			if ((player.basicBox.getXmin() < this->basicBox.getXmax()) && (player.basicBox.getXmax() > this->basicBox.getXmin())) {
-				this->alive = false;
 				return true;
 			}
 		}

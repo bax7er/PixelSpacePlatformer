@@ -37,6 +37,7 @@ public:
 	vector <Effect>  levelEffect;
 	vector <Effect>  animatedEffects;
 	vector <AiPlayer>  bots;
+	vector <Weapon>  botsWeapons;
 	Level();
 	Level(string filename);
 	Terrain makeObjectTerrain(string input);

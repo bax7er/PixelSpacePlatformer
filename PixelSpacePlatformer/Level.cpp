@@ -127,9 +127,14 @@ Level::Level(string filename) {
 	playerWeapon.weaponDamage = 100;
 	playerWeapon.setTexture(loadPNG("assets/textures/rocketLauncher.png"));
 	playerWeapon.explosion = Mix_LoadWAV("assets/music/Explosion3.wav");
-	bots.push_back(AiPlayer(0.0, 0.5, 0.2, 0.2));
+	bots.push_back(AiPlayer(0.0, 1, 0.2, 0.2));
 	bots[0].setTexture(loadPNG("assets/textures/Player.png"));
 	bots[0].setColour(0.9, 0.5, 0.2);
+	bots[0].weaponMount = Point(1,0);
+	botsWeapons.push_back(Weapon(0, 0, 0.26, 0.1, rocket));
+	botsWeapons[0].setSpawner(0.13, 0.02);
+	botsWeapons[0].weaponDamage = 100;
+	botsWeapons[0].setTexture(playerWeapon.textureID);
 }
 void Level::setDestroyable(string &input, vector <Terrain> &type) {
 	int values[2];
@@ -236,6 +241,8 @@ void Level::loadEffect(string &input, vector <Effect> &type) {
 
 void Level::draw()
 {
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	for (Terrain &terrain : background) // access by reference to avoid copying
 	{
 		//terrain.move(translation);
@@ -255,6 +262,11 @@ void Level::draw()
 	{
 		ai.setColour(1, 0, 0.2);
 		ai.drawAiPlayer();
+	}
+	for (Weapon &aiGun : botsWeapons) // access by reference to avoid copying
+	{
+		aiGun.setColour(1, 0, 0.2);
+		aiGun.weapDraw(Point(bots[0].basicBox.getXmid(), bots[0].basicBox.getYmid()));
 	}
 	for (Terrain &terrain : foreground) // access by reference to avoid copying
 	{
@@ -290,12 +302,34 @@ void Level::update(double speedMultiplier,GameObject cursor)
 	}
 	playerWeapon.aim(-angle);
 
+	target = Point(player.basicBox.getXmid(), player.basicBox.getYmid());
+	Point origin = bots[0].weaponMount;
+	Point current = botsWeapons[0].projectileSpawn;
+	target = target - origin;
+	current = current - origin;
+	//current.Normalise();
+	dot = DotProduct(current, target);
+	angle = (-acos(dot));
+	if (player.basicBox.getYmid() < bots[0].basicBox.getYmid()) {
+		angle *= -1;
+	}
+	//printf("%f \n", angle);
+	float dirToEnemyX = bots[0].basicBox.getXmid() - player.basicBox.getXmid();
+	float dirToEnemyY = bots[0].basicBox.getYmid() - player.basicBox.getYmid();
+
+	float playerRotation = atan2(-dirToEnemyY, -dirToEnemyX);
+	printf("%f \n", playerRotation);
+	//if (player.basicBox.getXmid() > bots[0].basicBox.getXmid()) {
+	//	playerRotation *= -1;
+	//}
+	botsWeapons[0].aim(-playerRotation);
 	background[0].texofset += speedMultiplier*0.01;
 	if (ticks >= 5) {
 		ticks = 0;
 		for (Effect &effect : animatedEffects) {
 			effect.addTick();
 		}
+		//botsWeapons[0].attack();
 	}
 	int i = 0;
 	while (i < levelGeometry.size()) {
@@ -314,7 +348,12 @@ void Level::update(double speedMultiplier,GameObject cursor)
 		i++;
 	}
 	bool flag = false;
+	bool intersectionCheck = false;
 	for (Terrain &terrain : levelGeometry) {
+		if(terrain.basicBox.checkLineIntersection(Point(bots[0].basicBox.getXmid(), bots[0].basicBox.getYmid()), Point(player.basicBox.getXmid(), player.basicBox.getYmid()))) {
+			intersectionCheck = true;
+		}
+		botsWeapons[0].checkProjectileCollision(terrain.basicBox, animatedEffects);
 		if (playerWeapon.checkProjectileCollision(terrain.basicBox, animatedEffects)) {
 			if (terrain.isDestroyable) {
 				terrain.isDestroyed = true;
@@ -329,7 +368,20 @@ void Level::update(double speedMultiplier,GameObject cursor)
 			flag = true;
 		}
 	}
+	if (!intersectionCheck) {
+		botsWeapons[0].attack();
+	}
+	botsWeapons[0].checkProjectileCollision(player.basicBox, animatedEffects);
 	player.setOnGround(flag);
+	for (AiPlayer &ai : bots) {
+		if (ai.checkOnTop(player)) {
+			player.setJump(true);
+			ai.healthPoints -= 10000;
+			if (ai.healthPoints <= 0) {
+				ai.alive = false;
+			}
+		}
+	}
 	Point movement =player.getTranslation(speedMultiplier);
 	bool hitHead = false;
 	for (Terrain &terrain : levelGeometry) {
@@ -339,6 +391,7 @@ void Level::update(double speedMultiplier,GameObject cursor)
 	}
 
 	for (AiPlayer &ai : bots) {
+
 		if (ai.basicBox.axisAlinedTest(player.basicBox, movement.getX(), movement.getY())) {
 			ai.basicBox.resolveColision(player.basicBox, movement, hitHead);
 		}
@@ -354,6 +407,7 @@ void Level::update(double speedMultiplier,GameObject cursor)
 		player.setJump(false);
 		player.setYSpeed(0);
 	}
+
 
 	for (Terrain &terrain : background) // access by reference to avoid copying
 	{
@@ -399,6 +453,11 @@ void Level::update(double speedMultiplier,GameObject cursor)
 			ai.distanceMovedX = 0;
 		}
 	}
+	for (Weapon &aiGun : botsWeapons) // access by reference to avoid copying
+	{
+		aiGun.rebind(Point(bots[0].basicBox.getXmid(), bots[0].basicBox.getYmid()));
+		//aiGun.weapDraw(Point(bots[0].basicBox.getXmid(), bots[0].basicBox.getYmid()));
+	}
 	for (Terrain &terrain : foreground) // access by reference to avoid copying
 	{
 		terrain.move(movement);
@@ -407,6 +466,7 @@ void Level::update(double speedMultiplier,GameObject cursor)
 	{
 		effect.move(movement);
 	}
+	botsWeapons[0].updateProjectiles(movement, speedMultiplier);
 	playerWeapon.updateProjectiles(movement, speedMultiplier);
 	if (cursor.basicBox.getXmid() > 0) {
 		playerWeapon.mirror(false);

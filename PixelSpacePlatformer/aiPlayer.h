@@ -22,6 +22,7 @@ public:
 	int healthPoints = 100000;
 	static double clock;
 	bool onGround = true;
+	Point weaponMount = Point(0, 0);
 	Point react(float fOffest,Player player);
 	void drawAiPlayer();
 	void animationUpdate(bool reversed);

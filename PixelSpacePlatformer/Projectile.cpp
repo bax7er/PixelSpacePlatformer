@@ -41,5 +41,5 @@ void Projectile::updatePos(double foffset) {
 Effect Projectile::collisionAction() {
 	this->active = false;
 	std::cout << "******* WE HIT A THING*****" << std::endl;
-	return Effect(basicBox.getXmid(), basicBox.getYmid(), 0.2, 0.2,effectTexture);
+	return Effect(basicBox.getXmid(), basicBox.getYmid(), 0.1, 0.1,effectTexture);
 }

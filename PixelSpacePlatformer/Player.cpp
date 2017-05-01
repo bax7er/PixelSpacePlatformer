@@ -18,6 +18,7 @@ Player::Player(float spawnXpos, float spawnYpos, float xSize, float ySize) :Game
 }
 
 void Player::drawPlayer() {
+
 	if (textureFlip) {
 		weaponMount.set(-0.02, -0.18);
 	}
@@ -48,6 +49,8 @@ void Player::drawPlayer() {
 		glDisable(GL_TEXTURE_2D);
 		//this->weapon.weapDraw(weaponMount);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glPopMatrix();
 }
 bool Player::checkCollision(GameObject &collisionObject){

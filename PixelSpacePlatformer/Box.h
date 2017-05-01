@@ -31,6 +31,7 @@ public:
 	bool SepAxisText(Box &other, float xOffset = 0.0, float yOffset = 0.0);
 	void resize(float xChange, float yChange);
 	void resolveColision(Box &other, Point & movement, bool &headHit);
+	bool checkLineIntersection(Point a, Point b);
 };
 inline float Box::getXSize() {
 	return this->xSize;

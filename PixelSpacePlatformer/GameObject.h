@@ -25,8 +25,9 @@ public:
 	void move(Point &p);
 	Box basicBox;
 	bool drawable = true;
-protected:
 	GLuint textureID = 0;
+protected:
+	
 	float red; float green; float blue;
 };
 inline void GameObject::setColour(float r, float g, float b) {

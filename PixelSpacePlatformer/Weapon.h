@@ -8,7 +8,7 @@ using namespace std;
 class Weapon : public GameObject {
 private:
 	Point bindPoint = Point(0,0);
-	Point projectileSpawn = Point(0, 0);
+	//Point projectileSpawn = Point(0, 0);
 	int maxProjectiles = 10000;
 	int currentProjectiles = 0;
 	Projectile sample;
@@ -18,6 +18,7 @@ private:
 	float initSpawnerX=0, initSpawnerY =0;
 	double currentAngle;
 public:
+	Point projectileSpawn = Point(0, 0);
 	float weaponDamage;
 	Mix_Chunk *explosion = NULL;
 	vector<Effect> effects;
