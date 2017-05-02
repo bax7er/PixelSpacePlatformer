@@ -102,8 +102,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\Dropbox\C++\PixelSpacePlatformer\PixelSpacePlatformer\Image_Loading;D:\Dropbox\C++\PixelSpacePlatformer\PixelSpacePlatformer\SDLLibs\SDL2-2.0.5\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Dropbox\C++\PixelSpacePlatformer\PixelSpacePlatformer\Image_Loading;D:\Dropbox\C++\PixelSpacePlatformer\PixelSpacePlatformer\SDLLibs\SDL2-2.0.5\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)Image_Loading;$(ProjectDir)SDLLibs\SDL2-2.0.5\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)Image_Loading;$(ProjectDir)SDLLibs\SDL2-2.0.5\lib\x86;$(LibraryPath)</LibraryPath>
     <ReferencePath>D:\Dropbox\C++\PixelSpacePlatformer\PixelSpacePlatformer\externalDLL;$(ReferencePath)</ReferencePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

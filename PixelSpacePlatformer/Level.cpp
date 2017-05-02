@@ -51,6 +51,13 @@ Level::Level(string filename) {
 		char* filename = new char[line.length() + 1];
 		strcpy(filename, line.c_str());
 		player.setTexture(loadPNG(filename));
+		delete[]filename;
+		getline(playerData, line);
+		getline(playerData, line, '#');
+		filename = new char[line.length() + 1];
+		strcpy(filename, line.c_str());
+		player.shieldTexture = loadPNG(filename);
+		delete[]filename;
 		getline(playerData, line);
 		getline(playerData, line, '#');
 		player.hp = stof(line);
@@ -124,9 +131,10 @@ Level::Level(string filename) {
 	playerWeapon = Weapon(0, 0, 0.26, 0.1, rocket);
 	playerWeapon.setBinding(0.05, 0);
 	playerWeapon.setSpawner(0.13, 0.02);
-	playerWeapon.weaponDamage = 100;
+	playerWeapon.weaponDamage = 300;
 	playerWeapon.setTexture(loadPNG("assets/textures/rocketLauncher.png"));
 	playerWeapon.explosion = Mix_LoadWAV("assets/music/Explosion3.wav");
+	//
 	bots.push_back(AiPlayer(0.0, 1, 0.2, 0.2));
 	bots[0].setTexture(loadPNG("assets/textures/Player.png"));
 	bots[0].setColour(0.9, 0.5, 0.2);
@@ -135,6 +143,29 @@ Level::Level(string filename) {
 	botsWeapons[0].setSpawner(0.13, 0.02);
 	botsWeapons[0].weaponDamage = 100;
 	botsWeapons[0].setTexture(playerWeapon.textureID);
+	bots[0].gun = &botsWeapons[0];
+	//
+	Projectile bullet = Projectile(0, 0, 0.05, 0.07, 0.1);
+	bullet.effectTexture = loadPNG("assets/textures/Explode.png");
+	bullet.setTexture(loadPNG("assets/textures/minigunBullet.png"));
+	//bots.push_back(AiPlayer(-1.4, 0.85, 0.2, 0.2));
+	bots.push_back(AiPlayer(-1.4, 0.5, 0.2, 0.2));
+	bots[1].setTexture(loadPNG("assets/textures/turretBody.png"));
+	bots[1].spritesOnSheet = 1;
+	bots[1].maxHP = 3000;
+	bots[1].healthPoints = bots[1].maxHP;
+	bots[1].hasCritical = false;
+	bots[1].setColour(1, 1, 1);
+	bots[1].weaponMount = Point(1, 0);
+	bots[1].aiMode = AIMODE_STATIC;
+	botsWeapons.push_back(Weapon(0, 0, 0.26, 0.1,bullet));
+	botsWeapons[1].setSpawner(0.13, 0.02);
+	botsWeapons[1].weaponDamage = 50;
+	botsWeapons[1].setTexture((loadPNG("assets/textures/turretGun.png")));
+	botsWeapons[1].fireDelay = 10;
+	bots[1].gun = &botsWeapons[1];
+	//
+	critSFX = Mix_LoadWAV("assets/music/headshot.wav");
 }
 void Level::setDestroyable(string &input, vector <Terrain> &type) {
 	int values[2];
@@ -151,12 +182,23 @@ void Level::setDestroyable(string &input, vector <Terrain> &type) {
 }
 void Level::cleanUp()
 {
-	textures.clear();
-	levelGeometry.clear();
-	foreground.clear();
-	background.clear();
-	levelEffect.clear();
-	animatedEffects.clear();
+	int i = 0;
+	while (i < levelGeometry.size()) {
+		if (levelGeometry[i].isDestroyed) {
+			levelGeometry.erase(levelGeometry.begin() + i);
+			i--;
+		}
+		i++;
+	}
+	i = 0;
+	while (i < bots.size()) {
+		if (!bots[i].alive) {
+			bots.erase(bots.begin() + i);
+			botsWeapons.erase(botsWeapons.begin() + i);
+			i--;
+		}
+		i++;
+	}
 }
 Terrain Level::makeObjectTerrain(string input) {
 	float values[5];
@@ -260,13 +302,17 @@ void Level::draw()
 	playerWeapon.weapDraw(player.weaponMount);
 	for (AiPlayer &ai : bots) // access by reference to avoid copying
 	{
-		ai.setColour(1, 0, 0.2);
+		//ai.setColour(1, 0, 0.2);
 		ai.drawAiPlayer();
+		//ai.gun->weapDraw(Point(ai.basicBox.getXmid(), ai.basicBox.getYmid()));
 	}
+
+	int count = 0;
 	for (Weapon &aiGun : botsWeapons) // access by reference to avoid copying
 	{
-		aiGun.setColour(1, 0, 0.2);
-		aiGun.weapDraw(Point(bots[0].basicBox.getXmid(), bots[0].basicBox.getYmid()));
+	//	aiGun.setColour(1, 0, 0.2);
+		aiGun.weapDraw(Point(bots[count].basicBox.getXmid(), bots[count].basicBox.getYmid()));
+		count++;
 	}
 	for (Terrain &terrain : foreground) // access by reference to avoid copying
 	{
@@ -279,6 +325,13 @@ void Level::draw()
 		//effect.move(translation);
 		effect.DrawEffect(true);
 	}
+	for (Point &p : intersectionMarkers) // access by reference to avoid copying
+	{
+		glPointSize(10.0);
+		glBegin(GL_POINTS);
+		glVertex2f(p.getX(), p.getY());
+		glEnd();
+	}
 }
 
 void Level::movePlayer()
@@ -290,9 +343,25 @@ void Level::playerAttack()
 	playerWeapon.attack();
 }
 
+void Level::aimBots()
+{
+	int i = 0;
+	while (i < bots.size() && i < botsWeapons.size()) {
+		if (bots[i].canShoot) {
+			float dirToEnemyX = bots[i].basicBox.getXmid() - player.basicBox.getXmid();
+			float dirToEnemyY = bots[i].basicBox.getYmid() - (player.basicBox.getYmax());
+			float playerRotation = atan2(-dirToEnemyY, -dirToEnemyX);
+			botsWeapons[i].aim(-playerRotation);
+		}
+		i++;
+	}
+}
+
 void Level::update(double speedMultiplier,GameObject cursor)
 {
-	
+	intersectionMarkers.clear();
+	printf("Player points: %i \n", player.points);
+	/*
 	Point target = Point(cursor.basicBox.getXmid(), cursor.basicBox.getYmid());
 	target.Normalise();
 	double dot = DotProduct(player.basicBox.getXmid() + 1, player.basicBox.getXmid(), target);
@@ -301,59 +370,33 @@ void Level::update(double speedMultiplier,GameObject cursor)
 		angle *= -1;
 	}
 	playerWeapon.aim(-angle);
+	*/
+	cleanUp(); // Removes destroyed terrain and dead bots
+	//aimBots();
+	playerWeapon.lastFired -= speedMultiplier;
+	Point target = Point(cursor.basicBox.getXmid(), cursor.basicBox.getYmid());
 
-	target = Point(player.basicBox.getXmid(), player.basicBox.getYmid());
-	Point origin = bots[0].weaponMount;
-	Point current = botsWeapons[0].projectileSpawn;
-	target = target - origin;
-	current = current - origin;
-	//current.Normalise();
-	dot = DotProduct(current, target);
-	angle = (-acos(dot));
-	if (player.basicBox.getYmid() < bots[0].basicBox.getYmid()) {
-		angle *= -1;
-	}
-	//printf("%f \n", angle);
-	float dirToEnemyX = bots[0].basicBox.getXmid() - player.basicBox.getXmid();
-	float dirToEnemyY = bots[0].basicBox.getYmid() - player.basicBox.getYmid();
+	float dirToCursorX = player.basicBox.getXmid()- cursor.basicBox.getXmid();
+	float dirToCursorY = player.basicBox.getYmid()- cursor.basicBox.getYmid();
 
-	float playerRotation = atan2(-dirToEnemyY, -dirToEnemyX);
-	printf("%f \n", playerRotation);
-	//if (player.basicBox.getXmid() > bots[0].basicBox.getXmid()) {
-	//	playerRotation *= -1;
-	//}
-	botsWeapons[0].aim(-playerRotation);
+	float cursorRotation = atan2(dirToCursorX, dirToCursorY);
+	playerWeapon.aim(cursorRotation+ 1.5708);
+
 	background[0].texofset += speedMultiplier*0.01;
 	if (ticks >= 5) {
 		ticks = 0;
 		for (Effect &effect : animatedEffects) {
 			effect.addTick();
 		}
-		//botsWeapons[0].attack();
 	}
-	int i = 0;
-	while (i < levelGeometry.size()) {
-		if (levelGeometry[i].isDestroyed) {
-			levelGeometry.erase(levelGeometry.begin() + i);
-			i--;
-		}
-		i++;
-	}
-	i = 0;
-	while (i < bots.size()) {
-		if (!bots[i].alive) {
-			bots.erase(bots.begin() + i);
-			i--;
-		}
-		i++;
-	}
+	
 	bool flag = false;
-	bool intersectionCheck = false;
+	
 	for (Terrain &terrain : levelGeometry) {
-		if(terrain.basicBox.checkLineIntersection(Point(bots[0].basicBox.getXmid(), bots[0].basicBox.getYmid()), Point(player.basicBox.getXmid(), player.basicBox.getYmid()))) {
-			intersectionCheck = true;
+		
+		for (Weapon &aiGun : botsWeapons) {
+			aiGun.checkProjectileCollision(terrain.basicBox, animatedEffects);
 		}
-		botsWeapons[0].checkProjectileCollision(terrain.basicBox, animatedEffects);
 		if (playerWeapon.checkProjectileCollision(terrain.basicBox, animatedEffects)) {
 			if (terrain.isDestroyable) {
 				terrain.isDestroyed = true;
@@ -368,17 +411,21 @@ void Level::update(double speedMultiplier,GameObject cursor)
 			flag = true;
 		}
 	}
-	if (!intersectionCheck) {
-		botsWeapons[0].attack();
+	
+	
+	for (Weapon &aiGun : botsWeapons) {
+		if (aiGun.checkProjectileCollision(player.basicBox, animatedEffects)) {
+			player.getHit(aiGun.weaponDamage);
+		}
 	}
-	botsWeapons[0].checkProjectileCollision(player.basicBox, animatedEffects);
 	player.setOnGround(flag);
 	for (AiPlayer &ai : bots) {
 		if (ai.checkOnTop(player)) {
 			player.setJump(true);
-			ai.healthPoints -= 10000;
+			ai.healthPoints -= 300;
 			if (ai.healthPoints <= 0) {
 				ai.alive = false;
+				player.points += ai.pointsForCritKill;
 			}
 		}
 	}
@@ -395,10 +442,19 @@ void Level::update(double speedMultiplier,GameObject cursor)
 		if (ai.basicBox.axisAlinedTest(player.basicBox, movement.getX(), movement.getY())) {
 			ai.basicBox.resolveColision(player.basicBox, movement, hitHead);
 		}
+		if (playerWeapon.canCritHit && ai.hasCritical) {
+			if (playerWeapon.checkProjectileCollision(ai.criticalRegion, animatedEffects)) {
+				ai.healthPoints -= ai.healthPoints;
+				ai.alive = false;
+				player.points += ai.pointsForCritKill;
+				Mix_PlayChannel(-1, this->critSFX, 0);
+			}
+		}else
 		if (playerWeapon.checkProjectileCollision(ai.basicBox, animatedEffects)) {
 			ai.healthPoints -= playerWeapon.weaponDamage;
 			if (ai.healthPoints <= 0) {
 				ai.alive = false;
+				player.points += ai.pointsForKill;
 			}
 		}
 		
@@ -418,6 +474,7 @@ void Level::update(double speedMultiplier,GameObject cursor)
 	{
 		terrain.move(movement);
 	}
+	int currentAI = 0;
 	for (AiPlayer &ai : bots) // access by reference to avoid copying
 	{
 		ai.move(movement);
@@ -429,18 +486,29 @@ void Level::update(double speedMultiplier,GameObject cursor)
 		}
 		ai.onGround = flag;
 		Point aiMovement = ai.react(speedMultiplier, player);
+		aiMovement.setX(aiMovement.getX()*-1);
+		aiMovement.setY(aiMovement.getY()*-1);
 		for (Terrain &terrain : levelGeometry) {
 			if (terrain.basicBox.axisAlinedTest(ai.basicBox, aiMovement.getX(), aiMovement.getY())) {
-				aiMovement.setX(aiMovement.getX()*-1);
-				aiMovement.setY(aiMovement.getY()*-1);
+				//aiMovement.setX(0);
+				//aiMovement.setY(0);
 				terrain.basicBox.resolveColision(ai.basicBox, aiMovement, hitHead);
 			}
 		}
 			if (player.basicBox.axisAlinedTest(ai.basicBox, aiMovement.getX(), aiMovement.getY())) {
-				aiMovement.setX(aiMovement.getX()*-1);
-				aiMovement.setY(aiMovement.getY()*-1);
+				//aiMovement.setX(aiMovement.getX()*-1);
+				//aiMovement.setY(aiMovement.getY()*-1);
 				player.basicBox.resolveColision(ai.basicBox, aiMovement, hitHead);
 			}
+			for (int i = currentAI + 1; i < bots.size(); i++) {
+				if (ai.basicBox.axisAlinedTest(bots[i].basicBox, aiMovement.getX(), aiMovement.getY())) {
+					//aiMovement.setX(aiMovement.getX()*-1);
+					//aiMovement.setY(aiMovement.getY()*-1);
+					ai.basicBox.resolveColision(bots[i].basicBox, aiMovement, hitHead);
+				}
+			}
+			aiMovement.setY(aiMovement.getY()*-1);
+			aiMovement.setX(aiMovement.getX()*-1);
 		ai.move(aiMovement);
 		if (aiMovement.getX() < 0) {
 			ai.distanceMovedX += (aiMovement.getX()*-1);
@@ -452,11 +520,27 @@ void Level::update(double speedMultiplier,GameObject cursor)
 			ai.nextFrame();
 			ai.distanceMovedX = 0;
 		}
+		currentAI++;
 	}
+	int count = 0;
+	aimBots();
 	for (Weapon &aiGun : botsWeapons) // access by reference to avoid copying
 	{
-		aiGun.rebind(Point(bots[0].basicBox.getXmid(), bots[0].basicBox.getYmid()));
-		//aiGun.weapDraw(Point(bots[0].basicBox.getXmid(), bots[0].basicBox.getYmid()));
+		aiGun.lastFired -= speedMultiplier;
+		bool intersectionCheck = false;
+		aiGun.rebind(Point(bots[count].basicBox.getXmid(), bots[count].basicBox.getYmid()));
+		aiGun.updateProjectiles(movement, speedMultiplier);
+		for (Terrain &terrain : levelGeometry) {
+			Point test;
+			if (terrain.basicBox.checkLineIntersection(Point(bots[count].basicBox.getXmid(), bots[count].basicBox.getYmid()), Point(player.basicBox.getXmid(), player.basicBox.getYmid()),test)) {
+				intersectionCheck = true;
+				intersectionMarkers.push_back(test);
+			}
+		}
+		if (!intersectionCheck && bots[count].canShoot) {
+			aiGun.attack();
+		}
+		count++;
 	}
 	for (Terrain &terrain : foreground) // access by reference to avoid copying
 	{
@@ -466,7 +550,7 @@ void Level::update(double speedMultiplier,GameObject cursor)
 	{
 		effect.move(movement);
 	}
-	botsWeapons[0].updateProjectiles(movement, speedMultiplier);
+	//botsWeapons[0].updateProjectiles(movement, speedMultiplier);
 	playerWeapon.updateProjectiles(movement, speedMultiplier);
 	if (cursor.basicBox.getXmid() > 0) {
 		playerWeapon.mirror(false);

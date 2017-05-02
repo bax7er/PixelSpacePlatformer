@@ -7,6 +7,7 @@ Weapon::Weapon(float spawnXpos, float spawnYpos, float xSize, float ySize, Proje
 	initSpawnY = spawnYpos;
 	sample = ammo;
 	clock = 0;
+	clip = vector<Projectile>();
 }
 Weapon::Weapon() : GameObject() {
 
@@ -25,18 +26,20 @@ void Weapon::rebind(Point &mount) {
 	this->projectileSpawn.move(-xmove, -ymove);
 }
 void Weapon::weapDraw(Point &mount) {
-	//	drawBox();
+	/*
 	glPointSize(10.0f);
 	glColor3f(1, 0, 0);
 	glBegin(GL_POINTS);
 	glVertex2f(projectileSpawn.getX(), projectileSpawn.getY());
 	glVertex2f(bindPoint.getX(), bindPoint.getY());
-	glEnd();
+	glEnd();/**/ //Uncomment to show projectile spawn points
 	glPointSize(5.0f);
 	glColor3f(0, 1, 0);
+
+	/*
 	glBegin(GL_POINTS);
 	glVertex2f(mount.getX(), mount.getY());
-	glEnd();
+	glEnd();/**/ //Uncomment to show weapon mount point
 	glPushMatrix();
 	//glLoadIdentity();
 	glEnable(GL_TEXTURE_2D);
@@ -63,7 +66,7 @@ void Weapon::weapDraw(Point &mount) {
 		}
 	}
 	for (Effect &e : effects) {
-		e.DrawEffect();
+		//e.DrawEffect();
 	}
 	glDisable(GL_TEXTURE_2D);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -90,12 +93,15 @@ void Weapon::resetPos() {
 	this->projectileSpawn.set(initSpawnerX, initSpawnerY);
 }
 Point Weapon::attack() {
-	cout << "FIRING Rockets at " << this->projectileSpawn.getX() << " , " << this->projectileSpawn.getY()<< endl;
-
+	
+	if (lastFired < 0) {
 		clip.push_back(Projectile(this->projectileSpawn.getX(), this->projectileSpawn.getY(), currentAngle, sample));
 		currentProjectiles++;
+		lastFired = fireDelay;
+	}
 		//return clip[clip.size() - 1].getReactiveMove();
 
+	
 	return Point(0, 0);
 }
 void Weapon::updateProjectiles(Point &tranformation, double fOffset) {
@@ -171,9 +177,9 @@ void Weapon::effectUpdate(int frameCounter) {
 
 void Weapon::aim(double angle)
 {
-	if (angle > -3.2 && angle < 3.2) {
+	//if (angle > -3.2 && angle < 3.2) {
 		resetPos();
 		rotateWeapon(angle);
 		currentAngle = angle;
-	}
+	//}
 }

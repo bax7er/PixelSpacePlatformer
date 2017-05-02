@@ -18,6 +18,9 @@ private:
 	float initSpawnerX=0, initSpawnerY =0;
 	double currentAngle;
 public:
+	float fireDelay = 100;
+	float lastFired = 0;
+	bool canCritHit = true;
 	Point projectileSpawn = Point(0, 0);
 	float weaponDamage;
 	Mix_Chunk *explosion = NULL;

@@ -47,10 +47,46 @@ void Player::drawPlayer() {
 				}
 			glEnd();
 		glDisable(GL_TEXTURE_2D);
+		if (hasShield) {
+			glEnable(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, shieldTexture);
+			glColor3f(red, green, blue);
+			glBegin(GL_QUADS);
+				glTexCoord2f(0, 0); glVertex2f(points[0].getX(), points[0].getY());
+				glTexCoord2f( 1, 0);	glVertex2f(points[1].getX(), points[1].getY());
+				glTexCoord2f( 1, 1);	glVertex2f(points[2].getX(), points[2].getY());
+				glTexCoord2f(0 , 1);	glVertex2f(points[3].getX(), points[3].getY());
+				glEnd();
+				glDisable(GL_TEXTURE_2D);
+		}
 		//this->weapon.weapDraw(weaponMount);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glPopMatrix();
+	//HP Bar Total
+	glColor3f(0, 0, 0);
+	glBegin(GL_QUADS);
+	glVertex2f(basicBox.getXmin(), basicBox.getYmax() + 0.01);
+	glVertex2f(basicBox.getXmax(), basicBox.getYmax() + 0.01);
+	glVertex2f(basicBox.getXmax(), basicBox.getYmax() + 0.04);
+	glVertex2f(basicBox.getXmin(), basicBox.getYmax() + 0.04);
+	glEnd();
+
+	double hpEnd = (basicBox.getXmax() - 0.01) - (basicBox.getXmin() + 0.01);
+	hpEnd *= (float)hp / (float)maxHP;
+	glColor3f(0, 1, 0);
+	if ((float)hp / (float)maxHP < 0.2) {
+		glColor3f(1, 0, 0);
+	}
+	//HP Bar Filled
+	glBegin(GL_QUADS);
+	glVertex2f(basicBox.getXmin() + 0.01, basicBox.getYmax() + 0.02);
+	glVertex2f(basicBox.getXmin() + 0.01 + hpEnd, basicBox.getYmax() + 0.02);
+	glVertex2f(basicBox.getXmin() + 0.01 + hpEnd, basicBox.getYmax() + 0.03);
+	glVertex2f(basicBox.getXmin() + 0.01, basicBox.getYmax() + 0.03);
+	glEnd();
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glPopMatrix();
 }
 bool Player::checkCollision(GameObject &collisionObject){
@@ -232,8 +268,9 @@ void Player::effectsUpdate() {
 void Player::getHit(float damage)
 {
 	if (hitTimer <= 0) {
-		hitTimer = 0.7;
+		hitTimer = 0.5;
 		hp -= damage;
 		printf("Player Hit \n");
+		hasShield = true;
 	}
 }

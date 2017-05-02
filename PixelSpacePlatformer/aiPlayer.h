@@ -1,5 +1,8 @@
 #ifndef AIPLAYER_H
 #define AIPLAYER_H
+#define AIMODE_STATIC 0
+#define AIMODE_WALK 1
+#define AIMODE_FLY 2
 #include "Player.h"
 #include <vector>
 #include "Weapon.h";
@@ -13,13 +16,22 @@ private:
 	int texturePos = 0;
 	bool faceLeft = true;
 	double lastUpdate = 0;
-	int spritesOnSheet = 11;
+	
 	float animationFrameRate = 0.2;
-	int maxHP = 100000;
+	
 public:
+	bool canShoot = true;
+	int maxHP = 1000;
+	int spritesOnSheet = 11;
+	int aiMode = AIMODE_WALK;
+	int pointsForKill = 100;
+	int pointsForCritKill = 200;
+	Weapon * gun;
+	bool hasCritical = true;
+	Box criticalRegion;
 	double distanceMovedX = 0;
 	bool alive = true;
-	int healthPoints = 100000;
+	int healthPoints = 1000;
 	static double clock;
 	bool onGround = true;
 	Point weaponMount = Point(0, 0);
@@ -32,7 +44,6 @@ public:
 	AiPlayer();
 	AiPlayer(float spawnXpos, float spawnYpos, float xSize, float ySize);
 	bool checkCollision(GameObject &collisionObject, float xShift, float yShift);
-	bool checkCollision(Player &collisionObject, Point &translation);
 	bool checkOnTop(GameObject &player);
 };
 #endif

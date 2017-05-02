@@ -22,7 +22,7 @@ public:
 	inline void setColour(float r, float g, float b);
 	inline void setAlpha(float a) { alpha = a; };
 	inline float getAlpha() { return alpha; };
-	void move(Point &p);
+	virtual void move(Point &p);
 	Box basicBox;
 	bool drawable = true;
 	GLuint textureID = 0;

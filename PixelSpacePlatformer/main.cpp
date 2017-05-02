@@ -57,8 +57,8 @@ void init()
 
 void update()
 {
-	if (frameTimeOffset < 0.1|| frameTimeOffset >=5) {
-		frameTimeOffset = 1;
+	if (frameTimeOffset >=10) {
+		frameTimeOffset = 10;
 	}
 	cursor.basicBox.set(mouse_x, mouse_y);
 	if (currentState == MAINMENU) {
@@ -84,6 +84,7 @@ void update()
 		currentLevel.advanceTicks(frameTimeOffset);
 		processKeys();
 		currentLevel.update(frameTimeOffset,cursor);
+
 	}
 }
 void display()
@@ -94,6 +95,25 @@ void display()
 	}
 	else if (currentState == PLAYING) {
 		currentLevel.draw();
+		// HUD
+		glColor3f(0, 0, 0);
+		glBegin(GL_QUADS);
+		glVertex2f(-1 * mouse_xAspect, 0.9);
+		glVertex2f(1 * mouse_xAspect, 0.9);
+		glVertex2f(1 * mouse_xAspect, 1);
+		glVertex2f(-1 * mouse_xAspect, 1);
+		glEnd();
+		glColor3f(1, 1, 1);
+		glEnable(GL_TEXTURE_2D);
+		glEnable(GL_BLEND);
+		myfont.Begin();
+		string time = "Time: ";
+		time.append(std::to_string(currentLevel.getClock()));
+		time.append("    Score:");
+		time.append(std::to_string(currentLevel.player.points));
+		myfont.DrawString(time, 0.001, -1 * mouse_xAspect, 1);
+		
+		// END of HUD
 	}
 	cursor.drawTextured();
 }
@@ -457,9 +477,9 @@ void processKeys()
 	}
 	if (mouseClick) {
 		//mouseClick = false;
-		if (currentLevel.getClock() > 5) {
+		//if (currentLevel.getClock() > 5) {
 			currentLevel.playerAttack();
-		}
+		//}
 	}
 }
 

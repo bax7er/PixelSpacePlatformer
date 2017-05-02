@@ -17,10 +17,10 @@ class Level {
 private:
 	double clock;
 	double ticks; // Frame of expected length
-	Player player;
 	double speedMultiplier;
 	Weapon playerWeapon;
 public:
+	Player player;
 	double getClock() { return clock; };
 	void setSpeedMulitplier(double speed) { speedMultiplier = speed; };
 	void movePlayer(double movement);
@@ -30,6 +30,8 @@ public:
 	void resetTicks() { ticks = 0; };
 	void advanceTicks(double time) { ticks += time; };
 	Mix_Music *levelMusic = NULL;
+	Mix_Chunk *critSFX = NULL;
+	vector <Point> intersectionMarkers;
 	vector <GLuint> textures;
 	vector <Terrain> levelGeometry;
 	vector <Terrain> foreground;
@@ -52,6 +54,7 @@ public:
 	void update(double speedMultiplier,GameObject cursor);
 	void movePlayer();
 	void playerAttack();
+	void aimBots();
 };
 
 #endif

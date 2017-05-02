@@ -280,7 +280,31 @@ void Box::resolveColision(Box & other, Point & movement, bool &headHit)
 	movement.set(xShift, yShift);
 }
 
-bool Box::checkLineIntersection(Point a, Point b)
+void Box::resolveColisionAI(Box & other, Point & movement, bool &headHit)
+{
+	float xShift = movement.getX();
+	float yShift = movement.getY();
+	if (axisAlinedTest(other, xShift, 0)) {
+		if (axisAlinedTest(other, xShift / 2, 0)) {
+			xShift *= -10;
+		}
+		else {
+			xShift /= 2;
+		}
+	}
+	else if (axisAlinedTest(other, 0, yShift)) {
+		if (axisAlinedTest(other, 0, yShift / 2)) {
+			yShift = 0;
+			headHit = true;
+		}
+		else {
+			yShift /= 2;
+		}
+
+	}
+	movement.set(xShift, yShift);
+}
+bool Box::checkLineIntersection(Point a, Point b,Point &intersection)
 {
 	for (int i = 0; i < 4; i++) {
 		Point c = points[i];
@@ -291,20 +315,33 @@ bool Box::checkLineIntersection(Point a, Point b)
 		else {
 			d = points[i + 1];
 		}
-		double
-			s1_x = b.getX() - a.getX(),
-			s1_y = b.getY() - a.getY(),
+		float i_x;
+		float i_y;
+		float p1_x = b.getX();
+		float p0_x = a.getX();
+		float p1_y = b.getY();
+		float p0_y = a.getY();
+		float p3_x = d.getX();
+		float p2_x = c.getX();
+		float p3_y = d.getY();
+		float p2_y = c.getY();
+		float s1_x, s1_y, s2_x, s2_y;
+		s1_x = p1_x - p0_x;
+		s1_y = p1_y - p0_y;
+		s2_x = p3_x - p2_x;
+		s2_y = p3_y - p2_y;
 
-			s2_x = d.getX() - c.getX(),
-			s2_y = d.getX() - c.getX(),
-			s = (-s1_y * (a.getX() - c.getX()) + s1_x * (a.getY() - c.getY())) / (-s2_x * s1_y + s1_x * s2_y),
-			t = (s2_x * (a.getY() - c.getY()) - s2_y * (a.getX() - c.getX())) / (-s2_x * s1_y + s1_x * s2_y);
+		float s, t;
+		s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
+		t = (s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
 
-		if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
-		{
+		if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
+			//if (i_x != NULL)
+			intersection.setX( p0_x + (t * s1_x));
+			//if (i_y != NULL)
+			intersection.setY(p0_y + (t * s1_y));
 			return true;
 		}
 	}
-		return false;
-
+			return false;
 }
