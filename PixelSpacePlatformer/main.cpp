@@ -9,6 +9,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <iomanip>
 
 using namespace std;
 
@@ -47,6 +48,7 @@ void init()
 	Mix_PlayMusic(currentTrack, -1);
 	cursor = GameObject(mouse_x, mouse_y, CURSORSIZE, CURSORSIZE);
 	menu = MainMenu(&myfont);
+	currentLevel.myfont = &myfont;
 	cursor.loadThisTexture("assets/textures/aim.png");
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	if (!myfont.Create("assets/fonts/Arial72.glf", -1)) {
@@ -71,7 +73,7 @@ void update()
 		menu.startPlaying = false;
 		Mix_HaltMusic();
 		Mix_FreeMusic(currentTrack);
-		currentLevel = Level(menu.filePath);
+		currentLevel = Level(menu.filePath,&myfont);
 		currentTrack = currentLevel.levelMusic;
 		Mix_PlayMusic(currentTrack, -1);
 		currentState = PLAYING;
@@ -89,6 +91,7 @@ void update()
 }
 void display()
 {	
+	cout << "HI" << endl;
 	glClear(GL_COLOR_BUFFER_BIT);
 	if (currentState == MAINMENU) {
 		menu.drawMenu();
@@ -107,11 +110,17 @@ void display()
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_BLEND);
 		myfont.Begin();
+		stringstream stream;
+		stream << "Time: ";
 		string time = "Time: ";
+		stream << fixed << setprecision(1) << currentLevel.getClock();
 		time.append(std::to_string(currentLevel.getClock()));
 		time.append("    Score:");
+		stream << "    Score:";
 		time.append(std::to_string(currentLevel.player.points));
-		myfont.DrawString(time, 0.001, -1 * mouse_xAspect, 1);
+		stream << currentLevel.player.points;
+		stream << "    FPS: " << (targetFramerate/ frameTimeOffset );
+		myfont.DrawString(stream.str(), 0.001, -1 * mouse_xAspect, 1);
 		
 		// END of HUD
 	}
@@ -458,6 +467,8 @@ bool startSDLaudio() {
 		return false;
 	}
 	Mix_AllocateChannels(2000);
+	//freopen("CON", "w", stdout);
+	//freopen("CON", "w", stderr);
 	return true;
 }
 
@@ -475,11 +486,19 @@ void processKeys()
 	if (keys[VK_SPACE]) {
 		currentLevel.playerJump();
 	}
+	if (keys[VK_TAB]) {
+		keys[VK_TAB] = false;
+		currentLevel.switchWeapon();
+	}
 	if (mouseClick) {
 		//mouseClick = false;
 		//if (currentLevel.getClock() > 5) {
-			currentLevel.playerAttack();
+			currentLevel.playerAttack(true);
+			
 		//}
+	}
+	else {
+		currentLevel.playerAttack(false);
 	}
 }
 

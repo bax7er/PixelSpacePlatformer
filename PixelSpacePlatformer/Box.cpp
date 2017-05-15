@@ -315,6 +315,47 @@ bool Box::checkLineIntersection(Point a, Point b,Point &intersection)
 		else {
 			d = points[i + 1];
 		}
+		float a_x = a.getX();
+		float a_y = a.getY();
+		float b_x = b.getX();
+		float b_y = b.getY();
+		float c_x = c.getX();
+		float c_y = c.getY();
+		float d_x = d.getX();
+		float d_y = d.getY();
+		float seg1_x, seg1_y, seg2_x, seg2_y;
+
+		seg1_x = b_x - a_x;
+		seg1_y = b_y - a_y;
+		seg2_x = d_x - c_x;
+		seg2_y = d_y - c_y;
+
+		float s, t;
+		s = (-seg1_y * (a_x - c_x) + seg1_x * (a_y - c_y)) / (-seg2_x * seg1_y + seg1_x * seg2_y);
+		t = (seg2_x * (a_y - c_y) - seg2_y * (a_x - c_x)) / (-seg2_x * seg1_y + seg1_x * seg2_y);
+
+		if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
+			intersection.setX( a_x + (t * seg1_x));
+			intersection.setY(a_y + (t * seg1_y));
+			return true;
+		}
+	}
+			return false;
+}
+
+bool Box::findFirstPointLineIntersection(Point a, Point b, Point & intersection)
+{
+	Point best;
+	double bestLength= DBL_MAX;
+	for (int i = 0; i < 4; i++) {
+		Point c = points[i];
+		Point d;
+		if (i == 3) {
+			d = points[0];
+		}
+		else {
+			d = points[i + 1];
+		}
 		float i_x;
 		float i_y;
 		float p1_x = b.getX();
@@ -336,12 +377,20 @@ bool Box::checkLineIntersection(Point a, Point b,Point &intersection)
 		t = (s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
 
 		if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
-			//if (i_x != NULL)
-			intersection.setX( p0_x + (t * s1_x));
-			//if (i_y != NULL)
-			intersection.setY(p0_y + (t * s1_y));
-			return true;
+			float xDiff = (p0_x + (t * s1_x)) - p0_x;
+			xDiff *= xDiff;
+			float yDiff = (p0_y + (t * s1_y)) - p0_y;
+			yDiff *= yDiff;
+			float length = xDiff + yDiff;
+				if (length < bestLength) {
+					bestLength = length;
+					intersection.setX(p0_x + (t * s1_x));
+					intersection.setY(p0_y + (t * s1_y));
+				}
 		}
 	}
-			return false;
+	if (bestLength != DBL_MAX) {
+		return true;
+	}
+	return false;
 }

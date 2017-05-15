@@ -13,7 +13,7 @@ $T assets/textures/console.png
 **Start of Unknown Elements**
 $M assets/music/space2.ogg
 **Start of Geometry**
-$G 1.01833,-0.0855879,1.54173,0.177279,5
+$G 10.01833,-0.0855879,1.54173,0.177279,5
 $GR 0,0.949422,-1.00895
 $GD 0,0
 $G -1.92442,-0.0961338,4.40928,0.2,3

@@ -7,40 +7,44 @@
 #define MUSIC 4
 void Level::movePlayer(double movement)
 {
-	player.setXSpeed(movement * speedMultiplier);
-	if (movement < 0) {
-		player.textureFlip = false;
-	}
-	if (movement > 0) {
-		player.textureFlip = true;
-	}
-	if (movement < 0) movement *= -1;
-	player.distanceMovedX += (movement* speedMultiplier);
-	if (movement == 0) {
-		player.moveToStandby();
+	if (player.alive) {
+		player.setXSpeed(movement * speedMultiplier);
+		if (movement < 0) {
+			player.textureFlip = false;
 		}
+		if (movement > 0) {
+			player.textureFlip = true;
+		}
+		if (movement < 0) movement *= -1;
+		player.distanceMovedX += (movement* speedMultiplier);
+		if (movement == 0) {
+			player.moveToStandby();
+		}
+	}
 }
 void Level::playerJump()
 {
-	if (player.isOnGround()) {
-		player.setJump(true);
+	if (player.alive) {
+		if (player.isOnGround()) {
+			player.setJump(true);
+		}
 	}
 }
 Level::Level() {
 
 }
-Level::Level(string filename) {
+Level::Level(string filename, GLFont * font) {
 	ifstream  data1("effects.MANIFEST");
-
+	this->myfont = font;
 	string line;
 	while (getline(data1, line))
 	{
-		loadEffect(line,levelEffect);
+		loadEffect(line, levelEffect);
 	}
 	data1.close();
 	ifstream  playerData("Default.plr");
 	{
-		getline(playerData, line,'#');
+		getline(playerData, line, '#');
 		double height = stod(line);
 		getline(playerData, line);
 		getline(playerData, line, '#');
@@ -66,6 +70,8 @@ Level::Level(string filename) {
 		player.spritesOnSheet = stoi(line);
 
 	}
+	endPoint = GameObject(0, 0, 0.2, 0.2);
+	endPoint.loadThisTexture("assets/textures/finishFlag.png");
 	ifstream data(filename);
 	int currentType = 0;
 	while (getline(data, line))
@@ -82,7 +88,7 @@ Level::Level(string filename) {
 				break;
 			case 'G':
 				currentType = GEOMETRY;
-				if (line[2] =='R') {
+				if (line[2] == 'R') {
 
 					setRepeat(line.substr(3), this->levelGeometry);
 				}
@@ -114,9 +120,23 @@ Level::Level(string filename) {
 			case 'E':
 				this->animatedEffects.push_back(makeEffect(line.substr(2)));
 				break;
-
+			case 'P':
+				this->powerUPs.push_back(makeCollectible(line.substr(2)));
+				break;
+			case 'A':
+				if (line[2] == 'W') {
+					this->botsWeapons.push_back(makeAIWeapon(line.substr(3)));
+				}
+				else {
+					this->bots.push_back(makeAI(line.substr(3)));
+				}
+				break;
+			case 'Z':
+				loadEnd(line.substr(2));
+				break;
 			}
-			
+
+
 		}
 		else {
 			cout << line << endl;
@@ -125,46 +145,34 @@ Level::Level(string filename) {
 	data.close();
 
 	player.setMountPoint(0, -0.18);
+	player.gameOverChunk = Mix_LoadWAV("assets/music/gameOver.wav");
+	player.goalChunk = Mix_LoadWAV("assets/music/goal.wav");
+	player.deadTexture = loadPNG("assets/textures/deadPlayer.png");
+	//Generate player weapons
 	Projectile rocket = Projectile(0, 0, 0.1, 0.05, 0.1);
 	rocket.effectTexture = loadPNG("assets/textures/Explode.png");
 	rocket.setTexture(loadPNG("assets/textures/rocket1.png"));
-	playerWeapon = Weapon(0, 0, 0.26, 0.1, rocket);
-	playerWeapon.setBinding(0.05, 0);
-	playerWeapon.setSpawner(0.13, 0.02);
-	playerWeapon.weaponDamage = 300;
-	playerWeapon.setTexture(loadPNG("assets/textures/rocketLauncher.png"));
-	playerWeapon.explosion = Mix_LoadWAV("assets/music/Explosion3.wav");
-	//
-	bots.push_back(AiPlayer(0.0, 1, 0.2, 0.2));
-	bots[0].setTexture(loadPNG("assets/textures/Player.png"));
-	bots[0].setColour(0.9, 0.5, 0.2);
-	bots[0].weaponMount = Point(1,0);
-	botsWeapons.push_back(Weapon(0, 0, 0.26, 0.1, rocket));
-	botsWeapons[0].setSpawner(0.13, 0.02);
-	botsWeapons[0].weaponDamage = 100;
-	botsWeapons[0].setTexture(playerWeapon.textureID);
-	bots[0].gun = &botsWeapons[0];
-	//
-	Projectile bullet = Projectile(0, 0, 0.05, 0.07, 0.1);
-	bullet.effectTexture = loadPNG("assets/textures/Explode.png");
-	bullet.setTexture(loadPNG("assets/textures/minigunBullet.png"));
-	//bots.push_back(AiPlayer(-1.4, 0.85, 0.2, 0.2));
-	bots.push_back(AiPlayer(-1.4, 0.5, 0.2, 0.2));
-	bots[1].setTexture(loadPNG("assets/textures/turretBody.png"));
-	bots[1].spritesOnSheet = 1;
-	bots[1].maxHP = 3000;
-	bots[1].healthPoints = bots[1].maxHP;
-	bots[1].hasCritical = false;
-	bots[1].setColour(1, 1, 1);
-	bots[1].weaponMount = Point(1, 0);
-	bots[1].aiMode = AIMODE_STATIC;
-	botsWeapons.push_back(Weapon(0, 0, 0.26, 0.1,bullet));
-	botsWeapons[1].setSpawner(0.13, 0.02);
-	botsWeapons[1].weaponDamage = 50;
-	botsWeapons[1].setTexture((loadPNG("assets/textures/turretGun.png")));
-	botsWeapons[1].fireDelay = 10;
-	bots[1].gun = &botsWeapons[1];
-	//
+	playerRocketLauncher = Weapon(0, 0, 0.26, 0.1, rocket);
+	playerLaser = HitscanWeapon(0, 0, 0.2, 0.07, rocket);
+	playerRocketLauncher.setBinding(0.05, 0);
+	playerRocketLauncher.setSpawner(0.13, 0.02);
+	playerRocketLauncher.weaponDamage = 300;
+	playerRocketLauncher.setTexture(loadPNG("assets/textures/rocketLauncher.png"));
+	playerRocketLauncher.explosion = Mix_LoadWAV("assets/music/Explosion3.wav");
+	playerLaser.setBinding(0.05, 0);
+	playerLaser.setSpawner(0.1, 0.0);
+	playerLaser.weaponDamage = 5;
+	playerLaser.range = 2;
+	playerLaser.beamTexture = loadPNG("assets/textures/beam.png");
+	playerLaser.impactTexture = loadPNG("assets/textures/laserImpact.png");
+	playerLaser.setTexture(loadPNG("assets/textures/spLaser.png"));
+	playerLaser.explosion = Mix_LoadWAV("assets/music/laser.wav");
+	//Finished making player weapons
+
+	//Load sound effects
+	Collectible::collectionSound = Mix_LoadWAV("assets/music/powerUpCollect.wav");
+	Collectible::quadDamageSound = Mix_LoadWAV("assets/music/quadDamage.wav");
+	Collectible::autoRocketSound = Mix_LoadWAV("assets/music/unstoppable.wav");
 	critSFX = Mix_LoadWAV("assets/music/headshot.wav");
 }
 void Level::setDestroyable(string &input, vector <Terrain> &type) {
@@ -172,7 +180,7 @@ void Level::setDestroyable(string &input, vector <Terrain> &type) {
 	string in;
 	istringstream ss(input);
 	int i = 0;
-	while (getline(ss, in, ',') && i< 2) {
+	while (getline(ss, in, ',') && i < 2) {
 		values[i] = stoi(in);
 		i++;
 	}
@@ -199,14 +207,22 @@ void Level::cleanUp()
 		}
 		i++;
 	}
+	i = 0;
+	while (i < powerUPs.size()) {
+		if (!powerUPs[i].active) {
+			powerUPs.erase(powerUPs.begin() + i);
+			i--;
+		}
+		i++;
+	}
 }
 Terrain Level::makeObjectTerrain(string input) {
 	float values[5];
 	string in;
 	istringstream ss(input);
 	int i = 0;
-	while (getline(ss, in, ',') && i<5) {
-		values[i]= stof(in);
+	while (getline(ss, in, ',') && i < 5) {
+		values[i] = stof(in);
 		i++;
 	}
 	Terrain finished = Terrain(values[0], values[1], values[2], values[3]);
@@ -214,11 +230,124 @@ Terrain Level::makeObjectTerrain(string input) {
 	return finished;
 }
 GLuint Level::loadTexture(string &input) {
-	
+
 	char* filename = new char[input.length() + 1];
 	strcpy(filename, input.c_str());
 	GLuint finished = loadPNG(filename);
+	delete[]filename;
 	return finished;
+}
+Collectible Level::makeCollectible(string & input)
+{
+	float values[6];
+	string in;
+	istringstream ss(input);
+	int i = 0;
+	while (getline(ss, in, ',') && i < 6) {
+		values[i] = stof(in);
+		i++;
+	}
+	Collectible finished = Collectible(values[0], values[1], values[2], values[3], values[4]);
+	finished.textureID = ((this->textures[values[5]]));
+	return finished;
+}
+AiPlayer Level::makeAI(string & input)
+{
+	float values[14];
+	string in;
+	istringstream ss(input);
+	int i = 0;
+	while (getline(ss, in, ',') && i < 14) {
+		values[i] = stof(in);
+		i++;
+	}
+	AiPlayer finished = AiPlayer(values[0], values[1], values[2], values[3]);
+	finished.textureID = ((this->textures[values[4]]));
+	finished.spritesOnSheet = values[5];
+	finished.maxHP = values[6];
+	finished.healthPoints = values[6];
+	finished.hasCritical = (values[13] == 1.0);
+	finished.setColour(values[7], values[8], values[9]);
+	finished.weaponMount = Point(values[10], values[11]);
+	finished.aiMode = values[12];
+	return finished;
+}
+Weapon Level::makeAIWeapon(string & input)
+{
+	Weapon newWeapon;
+	if (ammo.size() < 3) {
+		ammo.push_back(Projectile(0, 0, 0.1, 0.05, 0.1));
+		ammo[0].effectTexture = loadPNG("assets/textures/Explode.png");
+		ammo[0].setTexture(loadPNG("assets/textures/rocket1.png"));
+		ammo.push_back(Projectile(0, 0, 0.05, 0.07, 0.1));
+		ammo[1].effectTexture = loadPNG("assets/textures/Explode.png");
+		ammo[1].setTexture(loadPNG("assets/textures/minigunBullet.png"));
+		ammo.push_back(Projectile(0, 0, 0.05, 0.07, 0.1));
+		ammo[2].effectTexture = loadPNG("assets/textures/Explode.png");
+		ammo[2].setTexture(loadPNG("assets/textures/fireBall.png"));
+
+	}
+	if (input == " AI_RocketLauncher") {
+		newWeapon = Weapon(0, 0, 0.26, 0.1, ammo[0]);
+		newWeapon.setSpawner(0.13, 0.02);
+		newWeapon.weaponDamage = 100;
+		newWeapon.setTexture(loadPNG("assets/textures/rocketLauncher.png"));
+	}
+	else
+		if (input == " AI_TurretLaser") {
+			newWeapon = Weapon(0, 0, 0.26, 0.1, ammo[1]);
+			newWeapon.setSpawner(0.13, 0.02);
+			newWeapon.weaponDamage = 50;
+			newWeapon.setTexture((loadPNG("assets/textures/turretGun.png")));
+			newWeapon.fireDelay = 10;
+			newWeapon.animatedWeapon = true;
+			newWeapon.spritesInSet = 4;
+			newWeapon.currentFrame = 0;
+		}
+		else
+			if (input == " AI_DummyWeapon") {
+				newWeapon = Weapon(0, 0, 0.26, 0.1, ammo[1]);
+				newWeapon.setSpawner(0.13, 0.02);
+				newWeapon.weaponDamage = 0;
+				newWeapon.setTexture((loadPNG("assets/textures/turretGun.png")));
+				newWeapon.fireDelay = 100;
+				newWeapon.animatedWeapon = true;
+				newWeapon.spritesInSet = 4;
+				newWeapon.currentFrame = 0;
+			}
+			else
+				if (input == " AI_Unarmed") {
+					newWeapon = Weapon(0, 0, 0.26, 0.1, ammo[1]);
+					newWeapon.setSpawner(0.13, 0.02);
+					newWeapon.weaponDamage = 0;
+					newWeapon.setTexture((loadPNG("assets/textures/blank.png")));
+					newWeapon.fireDelay = 10000000;
+					newWeapon.animatedWeapon = true;
+					newWeapon.spritesInSet = 4;
+					newWeapon.currentFrame = 0;
+				}
+				else
+					if (input == " AI_PPlant") {
+						newWeapon = Weapon(0, 0, 0.15, 0.15, ammo[2]);
+						newWeapon.setSpawner(0.0, 0.0);
+						newWeapon.weaponDamage = 300;
+						newWeapon.setTexture((loadPNG("assets/textures/plantHead.png")));
+						newWeapon.fireDelay = 80;
+						newWeapon.animatedWeapon = true;
+					}
+	return newWeapon;
+}
+void Level::loadEnd(string & input)
+{
+	float values[2];
+	string in;
+	istringstream ss(input);
+	int i = 0;
+	while (getline(ss, in, ',') && i < 2) {
+		values[i] = stof(in);
+		i++;
+	}
+	this->endPoint.basicBox.set(values[0], values[1]);
 }
 void Level::loadMusic(string &input) {
 	char* filename = new char[input.length() + 1];
@@ -230,7 +359,7 @@ void Level::setRepeat(string &input, vector <Terrain> &type) {
 	string in;
 	istringstream ss(input);
 	int i = 0;
-	while (getline(ss, in, ',') && i< 3) {
+	while (getline(ss, in, ',') && i < 3) {
 		values[i] = stof(in);
 		i++;
 	}
@@ -274,7 +403,7 @@ void Level::loadEffect(string &input, vector <Effect> &type) {
 	type.push_back(Effect(1, 1, 1, 1, loadPNG(filename)));
 	getline(ss, in, ',');
 	spriteSet = stoi(in);
-	type[type.size()-1].framesInSet = spriteSet;
+	type[type.size() - 1].framesInSet = spriteSet;
 	getline(ss, in, ',');
 	speed = stoi(in);
 	cout << "$$$$ TickRate = " << speed << endl;
@@ -283,48 +412,65 @@ void Level::loadEffect(string &input, vector <Effect> &type) {
 
 void Level::draw()
 {
+
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	for (Terrain &terrain : background) // access by reference to avoid copying
+	for (Terrain &terrain : background)
 	{
-		//terrain.move(translation);
 		terrain.setColour(1, 1, 1);
 		terrain.drawTextured();
 	}
 
-	for (Terrain &terrain : levelGeometry) // access by reference to avoid copying
+	for (Terrain &terrain : levelGeometry)
 	{
-		//terrain.move(translation);
 		terrain.setColour(1, 1, 1);
 		terrain.drawTextured();
 	}
-	player.drawPlayer();
-	playerWeapon.weapDraw(player.weaponMount);
-	for (AiPlayer &ai : bots) // access by reference to avoid copying
+	if (player.alive) {
+		player.drawPlayer();
+	}
+
+	for (AiPlayer &ai : bots)
 	{
-		//ai.setColour(1, 0, 0.2);
 		ai.drawAiPlayer();
-		//ai.gun->weapDraw(Point(ai.basicBox.getXmid(), ai.basicBox.getYmid()));
 	}
 
 	int count = 0;
-	for (Weapon &aiGun : botsWeapons) // access by reference to avoid copying
+	for (Weapon &aiGun : botsWeapons)
 	{
-	//	aiGun.setColour(1, 0, 0.2);
 		aiGun.weapDraw(Point(bots[count].basicBox.getXmid(), bots[count].basicBox.getYmid()));
 		count++;
 	}
+	if (player.alive) {
+		switch (currentWeapon)
+		{
+		case ROCKETLAUNCHER:
+			playerRocketLauncher.weapDraw(player.weaponMount);
+			break;
+		case LASER:
+			playerLaser.weapDraw(player.weaponMount);
+			playerRocketLauncher.projDraw(); // Keep drawing the rockets even if we switch weapon
+			break;
+		default:
+			break;
+		}
+	}
+	for (Collectible &col : powerUPs) {
+		if (col.active) {
+			col.drawTextured();
+		}
+	}
 	for (Terrain &terrain : foreground) // access by reference to avoid copying
 	{
-		//terrain.move(translation);
 		terrain.setColour(1, 1, 1);
 		terrain.drawTextured();
 	}
 	for (Effect &effect : animatedEffects) // access by reference to avoid copying
 	{
-		//effect.move(translation);
 		effect.DrawEffect(true);
 	}
+
+	/*
 	for (Point &p : intersectionMarkers) // access by reference to avoid copying
 	{
 		glPointSize(10.0);
@@ -332,15 +478,83 @@ void Level::draw()
 		glVertex2f(p.getX(), p.getY());
 		glEnd();
 	}
+	/* Uncomment to draw points of intersection*/
+	endPoint.drawTextured();
+
+	//End of game hud
+	if (!player.alive) {
+		glColor4f(0, 0, 0, deathScreenAlpha);
+		deathScreenAlpha += 0.005*speedMultiplier;
+		glBegin(GL_QUADS);
+		glVertex2f(-10, -10);
+		glVertex2f(10, -10);
+		glVertex2f(10, 10);
+		glVertex2f(-10, 10);
+		glEnd();
+		glColor4f(1, 1, 1, deathScreenAlpha);
+		stringstream lvlScore;
+		lvlScore << "Level Score: ";
+		lvlScore << player.points;
+		stringstream totalScore;
+		totalScore << "Total Score: ";
+		if (!player.goalAchieved) {
+			player.drawDead();
+			glEnable(GL_TEXTURE_2D);
+			glEnable(GL_BLEND);
+			myfont->Begin();
+			myfont->DrawString("YOU DIED", 0.002, -0.5, 0.5);
+			myfont->DrawString(lvlScore.str(), 0.001, -0.5, 0.2);
+			totalScore << player.points;
+			myfont->DrawString(totalScore.str(), 0.001, -0.5, 0.1);
+
+		}
+		else {
+			stringstream timeBonus;
+			stringstream completionBonus;
+			float scoreBonus = (60 - (this->clock)) * 50;
+			if (scoreBonus < 0) { scoreBonus = 0; };
+			timeBonus << "Time Bonus: ";
+			timeBonus << fixed << setprecision(0) << scoreBonus;
+			completionBonus << "Completion Bonus: " << LEVELCOMPLETIONBONUS;
+			totalScore << fixed << setprecision(0) << (player.points + scoreBonus + LEVELCOMPLETIONBONUS);
+			glEnable(GL_TEXTURE_2D);
+			glEnable(GL_BLEND);
+			myfont->Begin();
+			myfont->DrawString("YOU WON", 0.002, -0.5, 0.5);
+			myfont->DrawString(lvlScore.str(), 0.001, -0.5, 0.2);
+			myfont->DrawString(timeBonus.str(), 0.001, -0.5, 0.1);
+			myfont->DrawString(completionBonus.str(), 0.001, -0.5, 0.0);
+			myfont->DrawString(totalScore.str(), 0.001, -0.5, -0.1);
+		}
+	}
 }
 
-void Level::movePlayer()
-{
-}
 
-void Level::playerAttack()
+void Level::playerAttack(bool isAttack)
 {
-	playerWeapon.attack();
+	if (player.alive) {
+		if (isAttack) {
+			switch (currentWeapon)
+			{
+			case ROCKETLAUNCHER:
+				playerRocketLauncher.attack();
+				playerLaser.firing = false;
+				break;
+			case LASER:
+				playerLaser.attack();
+				break;
+			default:
+				break;
+			}
+
+		}
+		else {
+			playerLaser.firing = false;
+		}
+	}
+	else {
+		playerLaser.firing = false;
+	}
 }
 
 void Level::aimBots()
@@ -357,47 +571,92 @@ void Level::aimBots()
 	}
 }
 
-void Level::update(double speedMultiplier,GameObject cursor)
+void Level::switchWeapon()
 {
-	intersectionMarkers.clear();
-	printf("Player points: %i \n", player.points);
-	/*
-	Point target = Point(cursor.basicBox.getXmid(), cursor.basicBox.getYmid());
-	target.Normalise();
-	double dot = DotProduct(player.basicBox.getXmid() + 1, player.basicBox.getXmid(), target);
-	double angle = (acos(dot));
-	if (cursor.basicBox.getYmid() < 0) {
-		angle *= -1;
+	currentWeapon++;
+	if (currentWeapon > maxWeapons) {
+		currentWeapon = 0;
 	}
-	playerWeapon.aim(-angle);
-	*/
+}
+void Level::respawnPlayer() {
+	player.respawn = false;
+	Point movement = player.respawnPoint * -1;
+	for (Terrain &terrain : background) // access by reference to avoid copying
+	{
+		terrain.move(movement);
+	}
+	for (Terrain &terrain : levelGeometry) // access by reference to avoid copying
+	{
+		terrain.move(movement);
+	}
+	for (Collectible &col : powerUPs) {
+		col.move(movement);
+	}
+	for (Terrain &terrain : foreground) // access by reference to avoid copying
+	{
+		terrain.move(movement);
+	}
+	for (Effect &effect : animatedEffects) // access by reference to avoid copying
+	{
+		effect.move(movement);
+	}
+	for (AiPlayer &ai : bots) // access by reference to avoid copying
+	{
+		ai.move(movement);
+	}
+	endPoint.move(movement);
+	player.respawnPoint = Point(0, 0);
+}
+void Level::update(double speedMultiplier, GameObject cursor)
+{
+	if (player.respawn) {
+		respawnPlayer();
+	}
+	player.speedHealMuliplier = speedMultiplier;
+	intersectionMarkers.clear(); //Remove last frames intersection points
 	cleanUp(); // Removes destroyed terrain and dead bots
-	//aimBots();
-	playerWeapon.lastFired -= speedMultiplier;
+
+	//Update time since last shot
+	playerRocketLauncher.lastFired -= speedMultiplier;
+
+	//Code to aim player weapon
 	Point target = Point(cursor.basicBox.getXmid(), cursor.basicBox.getYmid());
-
-	float dirToCursorX = player.basicBox.getXmid()- cursor.basicBox.getXmid();
-	float dirToCursorY = player.basicBox.getYmid()- cursor.basicBox.getYmid();
-
+	float dirToCursorX = player.basicBox.getXmid() - cursor.basicBox.getXmid();
+	float dirToCursorY = player.basicBox.getYmid() - cursor.basicBox.getYmid();
 	float cursorRotation = atan2(dirToCursorX, dirToCursorY);
-	playerWeapon.aim(cursorRotation+ 1.5708);
+	playerRocketLauncher.aim(cursorRotation + 1.5708);
+	playerLaser.aim(cursorRotation + 1.5708);
 
+	//move background - first background element will alway scrolls
 	background[0].texofset += speedMultiplier*0.01;
+
+	//Advance animation
 	if (ticks >= 5) {
 		ticks = 0;
 		for (Effect &effect : animatedEffects) {
 			effect.addTick();
 		}
 	}
-	
+
 	bool flag = false;
-	
+	this->intersectionMarkers.push_back(playerLaser.getMaxPoint());
+	playerLaser.endPoint = playerLaser.getMaxPoint();
 	for (Terrain &terrain : levelGeometry) {
-		
+
+		//Check if the player laser intersects terrain, clip if it does
+		if (playerLaser.checkHit(terrain.basicBox, playerLaser.endPoint)) {
+			this->intersectionMarkers.push_back(playerLaser.getCollisionPoint(terrain.basicBox));
+			playerLaser.endPoint = playerLaser.getCollisionPoint(terrain.basicBox);
+		}
+
+		//Check the ai projectiles for collision with terrain
 		for (Weapon &aiGun : botsWeapons) {
 			aiGun.checkProjectileCollision(terrain.basicBox, animatedEffects);
 		}
-		if (playerWeapon.checkProjectileCollision(terrain.basicBox, animatedEffects)) {
+
+		//Check the rocket launcher for collsion with terrian
+		if (playerRocketLauncher.checkProjectileCollision(terrain.basicBox, animatedEffects)) {
+			//if terrain is destroyable, destroy it
 			if (terrain.isDestroyable) {
 				terrain.isDestroyed = true;
 				terrain.drawable = false;
@@ -407,57 +666,95 @@ void Level::update(double speedMultiplier,GameObject cursor)
 				animatedEffects[animatedEffects.size() - 1].basicBox.resize(terrain.basicBox.getXSize(), terrain.basicBox.getYSize());
 			}
 		}
+		// check if the player is on the ground
 		if (terrain.checkOnGround(player.basicBox)) {
 			flag = true;
 		}
 	}
-	
-	
+
+	//Update the player on ground status
+	player.setOnGround(flag);
+
+	//Check if the ai hit the player
 	for (Weapon &aiGun : botsWeapons) {
 		if (aiGun.checkProjectileCollision(player.basicBox, animatedEffects)) {
 			player.getHit(aiGun.weaponDamage);
 		}
 	}
-	player.setOnGround(flag);
+
+
+	AiPlayer * toBeHit; // Closest ai we have found that will be hit
+	bool foundTarget = false; // If any ai will be hit 
+
+
 	for (AiPlayer &ai : bots) {
+		//Check if the laser hits
+		if (playerLaser.checkHit(ai.basicBox, playerLaser.endPoint)) {
+			this->intersectionMarkers.push_back(playerLaser.getCollisionPoint(ai.basicBox));
+			//Clip the end of the laser
+			playerLaser.endPoint = playerLaser.getCollisionPoint(ai.basicBox);
+			toBeHit = &ai;
+			foundTarget = true;
+		}
+		//Check if the player is standing on the ai head
 		if (ai.checkOnTop(player)) {
+
+			//make the player jump and damage us
 			player.setJump(true);
 			ai.healthPoints -= 300;
+			//kill us if needed
 			if (ai.healthPoints <= 0) {
 				ai.alive = false;
+				//crit points for head jump kill
 				player.points += ai.pointsForCritKill;
 			}
 		}
 	}
-	Point movement =player.getTranslation(speedMultiplier);
-	bool hitHead = false;
+	if (foundTarget && playerLaser.firing) {
+		toBeHit->healthPoints -= playerLaser.weaponDamage *speedMultiplier*(float)player.damageMultiplier;
+		//Did the laser kill us?
+		if (toBeHit->healthPoints <= 0) {
+			toBeHit->alive = false;
+			player.points += toBeHit->pointsForKill;
+		}
+	}
+
+	//Generate the vector for moving the level
+	Point movement = player.getTranslation(speedMultiplier);
+
+	bool hitHead = false; // True if we want to stop the jump due to top collision
+
 	for (Terrain &terrain : levelGeometry) {
-		if (terrain.basicBox.axisAlinedTest(player.basicBox,movement.getX(),movement.getY())) {
-			terrain.basicBox.resolveColision(player.basicBox, movement,hitHead);
+		//Check if we are going to collide
+		if (terrain.basicBox.axisAlinedTest(player.basicBox, movement.getX(), movement.getY())) {
+			terrain.basicBox.resolveColision(player.basicBox, movement, hitHead);
 		}
 	}
 
 	for (AiPlayer &ai : bots) {
-
+		//Check if we are going to collide
 		if (ai.basicBox.axisAlinedTest(player.basicBox, movement.getX(), movement.getY())) {
 			ai.basicBox.resolveColision(player.basicBox, movement, hitHead);
 		}
-		if (playerWeapon.canCritHit && ai.hasCritical) {
-			if (playerWeapon.checkProjectileCollision(ai.criticalRegion, animatedEffects)) {
-				ai.healthPoints -= ai.healthPoints;
+
+		//Check if the players rockets hit critical
+		if (playerRocketLauncher.canCritHit && ai.hasCritical && playerRocketLauncher.checkProjectileCollision(ai.criticalRegion, animatedEffects)) {
+			ai.healthPoints -= playerRocketLauncher.weaponDamage*player.damageMultiplier*2.5;
+			if (ai.healthPoints <= 0) {
 				ai.alive = false;
 				player.points += ai.pointsForCritKill;
 				Mix_PlayChannel(-1, this->critSFX, 0);
 			}
-		}else
-		if (playerWeapon.checkProjectileCollision(ai.basicBox, animatedEffects)) {
-			ai.healthPoints -= playerWeapon.weaponDamage;
+		}
+		//Check if the players rockets hit non-critical
+		else if (playerRocketLauncher.checkProjectileCollision(ai.basicBox, animatedEffects)) {
+			ai.healthPoints -= playerRocketLauncher.weaponDamage*player.damageMultiplier;
 			if (ai.healthPoints <= 0) {
 				ai.alive = false;
 				player.points += ai.pointsForKill;
 			}
 		}
-		
+
 	}
 	if (hitHead) {
 		player.setJump(false);
@@ -465,51 +762,67 @@ void Level::update(double speedMultiplier,GameObject cursor)
 	}
 
 
-	for (Terrain &terrain : background) // access by reference to avoid copying
+	for (Terrain &terrain : background) // update with new position
 	{
 		terrain.move(movement);
 	}
 
-	for (Terrain &terrain : levelGeometry) // access by reference to avoid copying
+	for (Terrain &terrain : levelGeometry) //  update with new position
 	{
 		terrain.move(movement);
 	}
+
+	for (Collectible &col : powerUPs) {
+		col.updateClock(this->speedMultiplier, player, playerRocketLauncher); //Power up timers
+		col.move(movement);//  update with new position
+		if (col.active && col.basicBox.axisAlinedTest(player.basicBox)) {
+			col.collisionAction(player, playerRocketLauncher);//Pick up the power up
+		}
+	}
+
 	int currentAI = 0;
-	for (AiPlayer &ai : bots) // access by reference to avoid copying
+	for (AiPlayer &ai : bots)
 	{
-		ai.move(movement);
-		bool flag = false;
+		ai.move(movement); // update with new position
+		bool flag = false; // Check if we need to fall
 		for (Terrain &terrain : levelGeometry) {
 			if (terrain.checkOnGround(ai.basicBox)) {
 				flag = true;
 			}
 		}
 		ai.onGround = flag;
+
+		//Generate our intended movement
 		Point aiMovement = ai.react(speedMultiplier, player);
+
+		//Invert out movement as these tests were designed for the player to move the level
 		aiMovement.setX(aiMovement.getX()*-1);
 		aiMovement.setY(aiMovement.getY()*-1);
+
 		for (Terrain &terrain : levelGeometry) {
+			//Check collision with level
 			if (terrain.basicBox.axisAlinedTest(ai.basicBox, aiMovement.getX(), aiMovement.getY())) {
-				//aiMovement.setX(0);
-				//aiMovement.setY(0);
 				terrain.basicBox.resolveColision(ai.basicBox, aiMovement, hitHead);
 			}
 		}
-			if (player.basicBox.axisAlinedTest(ai.basicBox, aiMovement.getX(), aiMovement.getY())) {
-				//aiMovement.setX(aiMovement.getX()*-1);
-				//aiMovement.setY(aiMovement.getY()*-1);
-				player.basicBox.resolveColision(ai.basicBox, aiMovement, hitHead);
+		//Check collision with player
+		if (player.basicBox.axisAlinedTest(ai.basicBox, aiMovement.getX(), aiMovement.getY())) {
+			player.basicBox.resolveColision(ai.basicBox, aiMovement, hitHead);
+		}
+		//Check collision with other ai
+		for (int i = currentAI + 1; i < bots.size(); i++) {
+			if (ai.basicBox.axisAlinedTest(bots[i].basicBox, aiMovement.getX(), aiMovement.getY())) {
+				ai.basicBox.resolveColision(bots[i].basicBox, aiMovement, hitHead);
 			}
-			for (int i = currentAI + 1; i < bots.size(); i++) {
-				if (ai.basicBox.axisAlinedTest(bots[i].basicBox, aiMovement.getX(), aiMovement.getY())) {
-					//aiMovement.setX(aiMovement.getX()*-1);
-					//aiMovement.setY(aiMovement.getY()*-1);
-					ai.basicBox.resolveColision(bots[i].basicBox, aiMovement, hitHead);
-				}
-			}
-			aiMovement.setY(aiMovement.getY()*-1);
-			aiMovement.setX(aiMovement.getX()*-1);
+		}
+
+		//Revert the inversion
+		aiMovement.setY(aiMovement.getY()*-1);
+		aiMovement.setX(aiMovement.getX()*-1);
+		//Move to new position
 		ai.move(aiMovement);
+
+		//Update movement for distance based animation
 		if (aiMovement.getX() < 0) {
 			ai.distanceMovedX += (aiMovement.getX()*-1);
 		}
@@ -522,9 +835,12 @@ void Level::update(double speedMultiplier,GameObject cursor)
 		}
 		currentAI++;
 	}
-	int count = 0;
-	aimBots();
-	for (Weapon &aiGun : botsWeapons) // access by reference to avoid copying
+
+
+	int count = 0;//Keep track of which ai this weapon is for
+	aimBots(); //Aim ai weapons
+
+	for (Weapon &aiGun : botsWeapons)
 	{
 		aiGun.lastFired -= speedMultiplier;
 		bool intersectionCheck = false;
@@ -532,37 +848,54 @@ void Level::update(double speedMultiplier,GameObject cursor)
 		aiGun.updateProjectiles(movement, speedMultiplier);
 		for (Terrain &terrain : levelGeometry) {
 			Point test;
-			if (terrain.basicBox.checkLineIntersection(Point(bots[count].basicBox.getXmid(), bots[count].basicBox.getYmid()), Point(player.basicBox.getXmid(), player.basicBox.getYmid()),test)) {
+			//Check if we have line of sight on player
+			if (intersectionCheck == false && bots[count].canShoot && terrain.basicBox.checkLineIntersection(Point(bots[count].basicBox.getXmid(), bots[count].basicBox.getYmid()), Point(player.basicBox.getXmid(), player.basicBox.getYmid()), test)) {
 				intersectionCheck = true;
 				intersectionMarkers.push_back(test);
 			}
 		}
+		//Fire at player if we have line of sight
 		if (!intersectionCheck && bots[count].canShoot) {
 			aiGun.attack();
 		}
 		count++;
 	}
-	for (Terrain &terrain : foreground) // access by reference to avoid copying
+	for (Terrain &terrain : foreground) //update to new position
 	{
 		terrain.move(movement);
 	}
-	for (Effect &effect : animatedEffects) // access by reference to avoid copying
+	for (Effect &effect : animatedEffects) //update to new position
 	{
 		effect.move(movement);
 	}
-	//botsWeapons[0].updateProjectiles(movement, speedMultiplier);
-	playerWeapon.updateProjectiles(movement, speedMultiplier);
-	if (cursor.basicBox.getXmid() > 0) {
-		playerWeapon.mirror(false);
+	if (cursor.basicBox.getXmid() > 0) { // Flip our weapon if we are aiming the other way, make it not upside down
+		playerRocketLauncher.mirror(false);
+		playerLaser.mirror(false);
 	}
 	else {
-		playerWeapon.mirror(true);
+		playerRocketLauncher.mirror(true);
+		playerLaser.mirror(true);
 	}
-	playerWeapon.rebind(player.weaponMount);
+
+	playerRocketLauncher.updateProjectiles(movement, speedMultiplier);//Move our rockets
+	if (currentWeapon == ROCKETLAUNCHER) {
+		playerRocketLauncher.rebind(player.weaponMount);
+	}
+	if (currentWeapon == LASER) {
+		playerLaser.rebind(player.weaponMount);
+	}
+
+	//Update our walking animation
 	if (player.distanceMovedX > 0.1) {
 		player.animateUpdate();
 		player.distanceMovedX = 0;
 	}
-
-
+	//Check if we have hit the end marker
+	if (player.basicBox.axisAlinedTest(endPoint.basicBox)) {
+		player.alive = false;
+		player.finished();
+	}
+	//Move the end point and respawn points
+	player.respawnPoint.move(movement.getX(), movement.getY());
+	endPoint.move(movement);
 }

@@ -21,9 +21,11 @@
   <ItemGroup>
     <ClInclude Include="aiPlayer.h" />
     <ClInclude Include="Box.h" />
+    <ClInclude Include="Collectible.h" />
     <ClInclude Include="Effect.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="glfont2.h" />
+    <ClInclude Include="HitScanWeapon.h" />
     <ClInclude Include="Image_Loading\nvImage.h" />
     <ClInclude Include="Level.h" />
     <ClInclude Include="MainMenu.h" />
@@ -36,9 +38,11 @@
   <ItemGroup>
     <ClCompile Include="aiPlayer.cpp" />
     <ClCompile Include="Box.cpp" />
+    <ClCompile Include="Collectible.cpp" />
     <ClCompile Include="Effect.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="glfont2.cpp" />
+    <ClCompile Include="HitScanWeapon.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainMenu.cpp" />

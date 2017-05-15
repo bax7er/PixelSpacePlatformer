@@ -9,7 +9,7 @@ Point AiPlayer::react(float fOffest,Player player)
 	double distance = sqrt((xDif*xDif) + (yDif*yDif));
 	canShoot = true;
 
-	if (distance > 2) {
+	if (distance > 1.5) {
 		canShoot = false;
 	}
 	if (aiMode == AIMODE_STATIC) {
@@ -21,7 +21,14 @@ Point AiPlayer::react(float fOffest,Player player)
 			falling = true;
 		}
 		if (distance < 2 && distance > 0.4) {
-			if (player.basicBox.getXmin() < this->basicBox.getXmin()) {
+		 if (player.basicBox.getXmid() - this->basicBox.getXmid()<0.05 && player.basicBox.getXmid() - this->basicBox.getXmid()> -0.05) {
+			this->animationUpdate(true);
+			if (!falling)
+				return Point(0, 0);
+			else
+				return Point(0, -0.01*fOffest);
+		}
+		 else if (player.basicBox.getXmid() < this->basicBox.getXmid()) {
 				faceLeft = true;
 				this->animationUpdate(false);
 				if (!falling)
@@ -32,7 +39,7 @@ Point AiPlayer::react(float fOffest,Player player)
 					return Point(-0.003*fOffest, -0.01*fOffest);
 				}
 			}
-			if (player.basicBox.getXmax() >= this->basicBox.getXmax()) {
+			else if (player.basicBox.getXmid() > this->basicBox.getXmid()) {
 				faceLeft = false;
 				this->animationUpdate(false);
 				if (!falling)
@@ -40,6 +47,7 @@ Point AiPlayer::react(float fOffest,Player player)
 				else
 					return Point(0.003*fOffest, -0.01*fOffest);
 			}
+			
 			else {
 				this->animationUpdate(true);
 			}
@@ -123,6 +131,8 @@ void AiPlayer::drawAiPlayer()
 	glEnd();
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glPopMatrix();
+	//basicBox.drawBox();
+	glColor3f(1, 0, 0);
 	//criticalRegion.drawBox(); //Uncomment to show head
 }
 
@@ -175,7 +185,7 @@ AiPlayer::AiPlayer(float spawnXpos, float spawnYpos, float xSize, float ySize) :
 {
 	this->alive = true;
 	this->healthPoints = 1000;
-	this->criticalRegion = Box(spawnXpos,(spawnYpos+ySize/3),xSize/2,ySize/2.5);
+	this->criticalRegion = Box(spawnXpos,(spawnYpos+ySize/3),xSize,ySize/2.5);
 	
 //	this->effectMoveX = 0;
 //	this->effectMoveY = 0;

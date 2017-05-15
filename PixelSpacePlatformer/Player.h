@@ -5,12 +5,13 @@
 #include <vector>
 #include "Image_Loading/nvImage.h"
 #include <iostream>
+#include <SDL_mixer.h>
 
 using namespace std;
 class Player : public GameObject{
 protected:
 	//Weapon weapon;
-
+	
 	float maxJumpTime = 0.8;
 	float currentJumptime=0;
 	float currentFalltime = 0;
@@ -28,6 +29,15 @@ protected:
 	float hitTimer = 0;
 	bool hasShield = false;
 public:
+	Point respawnPoint= Point(0, 0);
+	bool respawn = false;
+	int damageMultiplier = 1;
+	float speedHealMuliplier = 1.0;
+	GLuint deadTexture;
+	bool goalAchieved = false;
+	Mix_Chunk *gameOverChunk = NULL;
+	Mix_Chunk *goalChunk = NULL;
+	bool alive = true;
 	GLuint shieldTexture;
 	int points = 0;
 	double distanceMovedX = 0;
@@ -35,8 +45,8 @@ public:
 	bool jumping;
 	bool falling;
 	int spritesOnSheet = 11;
-	int hp = 1000;
-	int maxHP = 1000;
+	float hp = 1000;
+	float maxHP = 1000;
 	double clock = 0;
 	//void aimWeapon(double angle);
 	int animationFrameRate = 6;
@@ -69,7 +79,7 @@ public:
 				hasShield = false;
 			}
 			if (hitTimer < -1 && hp<maxHP) {
-				hp += time*1000;
+				hp += 1*speedHealMuliplier;
 				if (hp > maxHP) {
 					hp = maxHP;
 				}
@@ -122,5 +132,7 @@ public:
 	//void attack();
 	void updateProjectiles(Point &tranformation, double foffset);
 	void moveToStandby();
+	void finished();
+	void drawDead();
 };
 #endif

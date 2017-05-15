@@ -5,12 +5,10 @@
 class Projectile : public GameObject {
 private:
 	Point heading = Point(0,1);
-	double speedMultiplier = 0.02;
+	double speedMultiplier = 0.015;
 	double distantToLive = 6;
 	double maxDistance = 6;
-	float reactiveForce =0.5;
 public:
-	Point getReactiveMove();
 	GLuint effectTexture;
 	bool active = false;
 	Projectile(float spawnXpos, float spawnYpos, float xSize, float ySize, float angle);
@@ -19,6 +17,5 @@ public:
 	void generateHeading(float angle);
 	void updatePos(double foffset);
 	Effect collisionAction();
-
 };
 #endif

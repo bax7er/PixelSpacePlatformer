@@ -21,6 +21,7 @@ public:
 	inline Point& operator-(const Point& b);
 	inline Point& operator+(const Point& b);
 	inline Point& operator*(const int& b);
+	inline Point& operator*(const double& b);
 	void rotate(Point center, double angle);
 };
 double DotProduct(Point a, Point b);
@@ -53,6 +54,9 @@ inline Point& Point::operator+(const Point& b) {
 	return Point((this->x + b.x), (this->y + b.y));
 }
 inline Point& Point::operator*(const int& b) {
+	return Point((this->x *b), (this->y * b));
+}
+inline Point& Point::operator*(const double& b) {
 	return Point((this->x *b), (this->y * b));
 }
 #endif

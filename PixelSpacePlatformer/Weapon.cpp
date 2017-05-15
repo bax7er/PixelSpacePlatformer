@@ -48,16 +48,16 @@ void Weapon::weapDraw(Point &mount) {
 	Point* points = this->basicBox.getPoints();
 	glBegin(GL_QUADS);
 	if (!mirror_texture) {
-		glTexCoord2f(0, 0); glVertex2f(points[0].getX(), points[0].getY());
-		glTexCoord2f(1, 0);	glVertex2f(points[1].getX(), points[1].getY());
-		glTexCoord2f(1, 1);	glVertex2f(points[2].getX(), points[2].getY());
-		glTexCoord2f(0, 1);	glVertex2f(points[3].getX(), points[3].getY());
+		glTexCoord2f(0 + (float)currentFrame / spritesInSet, 0); glVertex2f(points[0].getX(), points[0].getY());
+		glTexCoord2f((currentFrame + 1.0) / spritesInSet, 0);	glVertex2f(points[1].getX(), points[1].getY());
+		glTexCoord2f((currentFrame + 1.0) / spritesInSet, 1);	glVertex2f(points[2].getX(), points[2].getY());
+		glTexCoord2f(0 + (float)currentFrame / spritesInSet, 1);	glVertex2f(points[3].getX(), points[3].getY());
 	}
 	else {
-		glTexCoord2f(0, 1); glVertex2f(points[0].getX(), points[0].getY());
-		glTexCoord2f(1, 1);	glVertex2f(points[1].getX(), points[1].getY());
-		glTexCoord2f(1, 0);	glVertex2f(points[2].getX(), points[2].getY());
-		glTexCoord2f(0, 0);	glVertex2f(points[3].getX(), points[3].getY());
+		glTexCoord2f(0 + (float)currentFrame / spritesInSet,1); glVertex2f(points[0].getX(), points[0].getY());
+		glTexCoord2f((currentFrame + 1.0) / spritesInSet, 1);	glVertex2f(points[1].getX(), points[1].getY());
+		glTexCoord2f((currentFrame + 1.0) / spritesInSet,0);	glVertex2f(points[2].getX(), points[2].getY());
+		glTexCoord2f(0 + (float)currentFrame / spritesInSet, 0);	glVertex2f(points[3].getX(), points[3].getY());
 	}
 	glEnd();
 	for (Projectile &Projectile : clip) {
@@ -65,18 +65,22 @@ void Weapon::weapDraw(Point &mount) {
 			Projectile.drawTextured();
 		}
 	}
-	for (Effect &e : effects) {
-		//e.DrawEffect();
-	}
 	glDisable(GL_TEXTURE_2D);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glPopMatrix();
+}
+void Weapon::projDraw() {
+	for (Projectile &Projectile : clip) {
+		if (Projectile.active) {
+			Projectile.drawTextured();
+		}
+	}
 }
 void Weapon::setSpawner(float x, float y) {
 	this->projectileSpawn.set(x, y);
 	this->initSpawnerX = x;
 	this->initSpawnerY = y;
-	std::cout << initSpawnerX << " ******************************************" << initSpawnerY << endl;
+	//std::cout << initSpawnerX << " ******************************************" << initSpawnerY << endl;
 }
 void Weapon::setSpawner() {
 	this->projectileSpawn.set(this->basicBox.getXmax(), this->basicBox.getYmid());
@@ -92,17 +96,21 @@ void Weapon::resetPos() {
 	this->basicBox.set(initSpawnX, initSpawnY);
 	this->projectileSpawn.set(initSpawnerX, initSpawnerY);
 }
-Point Weapon::attack() {
+void Weapon::attack() {
 	
 	if (lastFired < 0) {
 		clip.push_back(Projectile(this->projectileSpawn.getX(), this->projectileSpawn.getY(), currentAngle, sample));
 		currentProjectiles++;
 		lastFired = fireDelay;
+		currentFrame++;
+		if (currentFrame + 1 > spritesInSet) {
+			currentFrame = 0;
+		}
 	}
 		//return clip[clip.size() - 1].getReactiveMove();
 
 	
-	return Point(0, 0);
+	//return Point(0, 0);
 }
 void Weapon::updateProjectiles(Point &tranformation, double fOffset) {
 	size_t i = 0;
@@ -118,11 +126,8 @@ void Weapon::updateProjectiles(Point &tranformation, double fOffset) {
 		i++;
 	}
 	for (Projectile &Projectile : clip) {
-		Projectile.basicBox.move(tranformation.getX(), tranformation.getY());
 		Projectile.updatePos(fOffset);
-	}
-	for (Effect &e : effects) {
-		e.basicBox.move(tranformation.getX(), tranformation.getY());
+		Projectile.basicBox.move(tranformation.getX(), tranformation.getY());
 	}
 }
 bool Weapon::checkProjectileCollision(Box &collision,vector <Effect> &effectList) {

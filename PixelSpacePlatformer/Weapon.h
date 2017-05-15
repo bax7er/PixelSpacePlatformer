@@ -6,7 +6,7 @@
 #include <iostream>
 using namespace std;
 class Weapon : public GameObject {
-private:
+protected:
 	Point bindPoint = Point(0,0);
 	//Point projectileSpawn = Point(0, 0);
 	int maxProjectiles = 10000;
@@ -18,6 +18,10 @@ private:
 	float initSpawnerX=0, initSpawnerY =0;
 	double currentAngle;
 public:
+	void projDraw();
+	bool animatedWeapon = false;
+	int spritesInSet = 1;
+	int currentFrame = 1;
 	float fireDelay = 100;
 	float lastFired = 0;
 	bool canCritHit = true;
@@ -40,10 +44,10 @@ public:
 	void setSpawner(float x, float y);
 	void setSpawner();
 	void rebind(Point &mount);
-	void weapDraw(Point &mount);
+	virtual void weapDraw(Point &mount);
 	void rotateWeapon(float angle);
 	void resetPos();
-	Point attack();
+	virtual void attack();
 	void updateProjectiles(Point &tranformation, double fOffset);
 	bool checkProjectileCollision(Box &collision, vector <Effect> &effectList);
 	void effectUpdate(int counter);

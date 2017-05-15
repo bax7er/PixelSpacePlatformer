@@ -30,6 +30,9 @@ void Player::drawPlayer() {
 		//glLoadIdentity();
 		glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, textureID);
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			glColor3f(red, green, blue);
 			Point* points = this->basicBox.getPoints();
 			glBegin(GL_QUADS);
@@ -60,9 +63,7 @@ void Player::drawPlayer() {
 				glDisable(GL_TEXTURE_2D);
 		}
 		//this->weapon.weapDraw(weaponMount);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	
 	glPopMatrix();
 	//HP Bar Total
 	glColor3f(0, 0, 0);
@@ -250,6 +251,31 @@ void Player::moveToStandby()
 		}
 	}
 }
+void Player::finished()
+{
+	if (!goalAchieved) {
+		Mix_FadeOutMusic(1000);
+		Mix_PlayChannel(-1, this->goalChunk, 0);
+		goalAchieved = true;
+	}
+}
+void Player::drawDead()
+{
+	glPushMatrix();
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, deadTexture);
+	glColor3f(red, green, blue);
+	Point* points = this->basicBox.getPoints();
+	//glRotatef(20, 0.0, 0.0, 1.0);
+	glBegin(GL_QUADS);
+		glTexCoord2f(0 , 0); glVertex2f(points[0].getX(), points[0].getY());
+		glTexCoord2f( 1 , 0);	glVertex2f(points[1].getX()+0.05, points[1].getY());
+		glTexCoord2f(1, 1);	glVertex2f(points[2].getX() + 0.05, points[2].getY());
+		glTexCoord2f(0 , 1);	glVertex2f(points[3].getX(), points[3].getY());
+	glEnd();
+	glDisable(GL_TEXTURE_2D);
+	glPopMatrix();
+}
 void Player::animateUpdate() {
 	//cout << "CLOCK" << this->clock << " Last update At:" << this->lastUpdate << endl;
 	//cout << "Time since last update :" << clock - lastUpdate << endl;
@@ -272,5 +298,10 @@ void Player::getHit(float damage)
 		hp -= damage;
 		printf("Player Hit \n");
 		hasShield = true;
+		if (hp <= 0) {
+			alive = false;
+			Mix_FadeOutMusic(1000);
+			Mix_PlayChannel(-1, this->gameOverChunk, 0);
+		}
 	}
 }

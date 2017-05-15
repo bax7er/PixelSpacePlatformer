@@ -33,6 +33,7 @@ public:
 	void resolveColision(Box &other, Point & movement, bool &headHit);
 	void resolveColisionAI(Box &other, Point & movement, bool &headHit);
 	bool checkLineIntersection(Point a, Point b,Point &intersection);
+	bool findFirstPointLineIntersection(Point a, Point b, Point &intersection);
 };
 inline float Box::getXSize() {
 	return this->xSize;
