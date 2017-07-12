@@ -1,10 +1,10 @@
 # PixelSpacePlatformer
 Project for Graphics 1 module
 
-##Key Features:
-###Weapon Collision Methods 
+## Key Features:
+### Weapon Collision Methods 
 
-####Projectile
+#### Projectile
 Projectile weapons are used in the game with weapons that have large and/or slow moving projectiles. 
 This is because fast moving projectiles may be ahead of the target in one frame and behind it in the following frame, leading to a missed collision.
 Projectile based weapons also allow the projectile movement to be seen traveling along its trajectory.
