@@ -1,8 +1,8 @@
 # PixelSpacePlatformer
-Project for Graphics 1 module
-Written in C++ and OpenGL
-Using nvImage loader and SDL_mixer for audio
-Audio and image assets used are not my own
+Project for Graphics 1 module.  
+Written in C++ and OpenGL.  
+Using nvImage loader and SDL_mixer for audio.  
+Audio and image assets used are not my own.  
 
 # Key Features:
 ## Weapon Collision Methods 
