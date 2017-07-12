@@ -17,8 +17,8 @@ public:
 	Point getCollisionPoint(Box target);
 	Point getCollisionPoint(Box target,Point max);
 	bool checkHit(Box target,Point max);
-	bool checkHitUpdate(Box target);
-	void weapDraw(Point &mount);
+	//bool checkHitUpdate(Box target);
+	void weapDraw(Point &mount,bool debug);
 	HitscanWeapon(float spawnXpos, float spawnYpos, float xSize, float ySize, Projectile &ammo);
 	HitscanWeapon();
 	void attack();

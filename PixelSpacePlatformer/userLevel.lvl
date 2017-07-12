@@ -11,7 +11,7 @@ $T assets\textures\dirtEdge.png
 $T assets\textures\pipe.png
 $T assets\textures\stem.png
 **Start of Unknown Elements**
-$Z 0,1
+$Z 13,0
 $M assets/music/marioOverworld.ogg
 $A 1.5,0.14, 0.2, 0.2,5,8,1000,1.0,1.0,1.0,1,0,1,1
 $AW AI_RocketLauncher

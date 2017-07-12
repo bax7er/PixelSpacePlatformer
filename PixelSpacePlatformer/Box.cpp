@@ -1,7 +1,7 @@
 #pragma once
 #include "Point.h"
 #include "Box.h"
-#include "nvImage.h"
+#include "Image_loading\nvImage.h"
 #include <iostream>
 
 Point* Box::getPoints() {

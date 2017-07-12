@@ -34,7 +34,7 @@ bool HitscanWeapon::checkHit(Box target,Point max)
 }
 
 
-void HitscanWeapon::weapDraw(Point & mount)
+void HitscanWeapon::weapDraw(Point & mount, bool debug)
 {
 	glPointSize(5.0f);
 	glColor3f(1, 0, 0);
@@ -62,13 +62,6 @@ void HitscanWeapon::weapDraw(Point & mount)
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//glBegin(GL_QUADS);
-
-	//glVertex2f(endPoint.getX(), endPoint.getY()+0.05);
-	//glVertex2f(endPoint.getX(), endPoint.getY());
-	//glVertex2f(projectileSpawn.getX(), projectileSpawn.getY());
-	//glVertex2f(projectileSpawn.getX(), projectileSpawn.getY()+0.05);
-	//glEnd();
 	glPushMatrix();
 	if (this->firing) {
 		glPushMatrix();
@@ -83,7 +76,7 @@ void HitscanWeapon::weapDraw(Point & mount)
 		glEnable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, beamTexture);
 		glBegin(GL_QUADS);
-		glTexCoord2f(1, 1); glVertex2f(lineLength+0.05, 0.05);
+		glTexCoord2f(1, 1); glVertex2f(lineLength + 0.05, 0.05);
 		glTexCoord2f(1, 0); glVertex2f(lineLength + 0.05, 0);
 		glTexCoord2f(0, 0); glVertex2f(0, 0);
 		glTexCoord2f(0, 1); glVertex2f(0, 0.05);
@@ -100,15 +93,16 @@ void HitscanWeapon::weapDraw(Point & mount)
 
 		glDisable(GL_TEXTURE_2D);
 		glPopMatrix();
+		if (debug) {
 		glColor3f(1, 0, 0);
 		glBegin(GL_POINTS);
-		//glVertex2f(basicBox.getXmid(), basicBox.getYmid());
+		glVertex2f(basicBox.getXmid(), basicBox.getYmid());
 		glVertex2f(projectileSpawn.getX(), projectileSpawn.getY());
-		//glVertex2f(projectileSpawnBehind.getX(), projectileSpawnBehind.getY());
-		//glVertex2f(getMaxPoint().getX(), getMaxPoint().getY());
-		//glColor3f(0, 1, 0);
+		glVertex2f(getMaxPoint().getX(), getMaxPoint().getY());
+		glColor3f(0, 1, 0);
 		glVertex2f(endPoint.getX(), endPoint.getY());
 		glEnd();
+	}
 	}
 	glPopMatrix();
 	

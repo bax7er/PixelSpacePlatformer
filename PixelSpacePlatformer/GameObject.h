@@ -1,7 +1,7 @@
 #ifndef GAMEOBJECT_H
 #define GAMEOBJECT_H
 #include "Box.h"
-#include "nvImage.h"
+#include "Image_Loading/nvImage.h"
 GLuint loadPNG(char* name);
 class GameObject {
 private:

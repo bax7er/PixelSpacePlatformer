@@ -69,10 +69,13 @@ void Weapon::weapDraw(Point &mount) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glPopMatrix();
 }
-void Weapon::projDraw() {
-	for (Projectile &Projectile : clip) {
-		if (Projectile.active) {
-			Projectile.drawTextured();
+void Weapon::projDraw(bool debug) {
+	for (Projectile &projectile : clip) {
+		if (projectile.active) {
+			projectile.drawTextured();
+			if (debug) {
+				projectile.drawBox();
+			}
 		}
 	}
 }

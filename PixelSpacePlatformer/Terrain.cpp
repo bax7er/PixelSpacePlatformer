@@ -2,7 +2,7 @@
 #include "Terrain.h"
 #include <iostream>
 Terrain::Terrain(float spawnXpos, float spawnYpos, float xSize, float ySize):GameObject(spawnXpos, spawnYpos, xSize, ySize) {
-	
+	this->ground = true;
 }
 Terrain::Terrain() : GameObject() {
 

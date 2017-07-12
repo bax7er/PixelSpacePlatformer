@@ -25,7 +25,9 @@ void Level::movePlayer(double movement)
 void Level::playerJump()
 {
 	if (player.alive) {
+		printf("Player is alive \n");
 		if (player.isOnGround()) {
+			printf("Player is on ground \n");
 			player.setJump(true);
 		}
 	}
@@ -410,7 +412,7 @@ void Level::loadEffect(string &input, vector <Effect> &type) {
 	type[type.size() - 1].tickRate = speed;
 }
 
-void Level::draw()
+void Level::draw(bool debugMode)
 {
 
 	glEnable(GL_TEXTURE_2D);
@@ -425,14 +427,26 @@ void Level::draw()
 	{
 		terrain.setColour(1, 1, 1);
 		terrain.drawTextured();
+		if (debugMode) {
+			terrain.drawBox();
+		}
 	}
 	if (player.alive) {
 		player.drawPlayer();
+		if (debugMode) {
+			player.drawBox();
+		}
 	}
 
 	for (AiPlayer &ai : bots)
 	{
 		ai.drawAiPlayer();
+		if (debugMode) {
+			ai.drawBox();
+			if (ai.hasCritical) {
+				ai.criticalRegion.drawBox();
+			}
+		}
 	}
 
 	int count = 0;
@@ -440,16 +454,30 @@ void Level::draw()
 	{
 		aiGun.weapDraw(Point(bots[count].basicBox.getXmid(), bots[count].basicBox.getYmid()));
 		count++;
+		if (debugMode) {
+			aiGun.drawBox();
+			aiGun.projDraw(true);
+		}
 	}
 	if (player.alive) {
 		switch (currentWeapon)
 		{
 		case ROCKETLAUNCHER:
 			playerRocketLauncher.weapDraw(player.weaponMount);
+			if (debugMode) {
+				playerRocketLauncher.projDraw(true);
+			}
 			break;
 		case LASER:
-			playerLaser.weapDraw(player.weaponMount);
-			playerRocketLauncher.projDraw(); // Keep drawing the rockets even if we switch weapon
+			
+			if (debugMode) {
+				playerRocketLauncher.projDraw(true);
+				playerLaser.weapDraw(player.weaponMount,true);
+			}
+			else {
+				playerLaser.weapDraw(player.weaponMount, false);
+				playerRocketLauncher.projDraw(false); // Keep drawing the rockets even if we switch weapon
+			}
 			break;
 		default:
 			break;
@@ -458,6 +486,9 @@ void Level::draw()
 	for (Collectible &col : powerUPs) {
 		if (col.active) {
 			col.drawTextured();
+			if (debugMode) {
+				col.drawBox();
+			}
 		}
 	}
 	for (Terrain &terrain : foreground) // access by reference to avoid copying
@@ -470,17 +501,20 @@ void Level::draw()
 		effect.DrawEffect(true);
 	}
 
-	/*
-	for (Point &p : intersectionMarkers) // access by reference to avoid copying
-	{
-		glPointSize(10.0);
-		glBegin(GL_POINTS);
-		glVertex2f(p.getX(), p.getY());
-		glEnd();
+	if (debugMode) {
+		for (Point &p : intersectionMarkers) // access by reference to avoid copying
+		{
+			glPointSize(10.0);
+			glBegin(GL_POINTS);
+			glVertex2f(p.getX(), p.getY());
+			glEnd();
+		}
 	}
 	/* Uncomment to draw points of intersection*/
 	endPoint.drawTextured();
-
+	if (debugMode) {
+		endPoint.drawBox();
+	}
 	//End of game hud
 	if (!player.alive) {
 		glColor4f(0, 0, 0, deathScreenAlpha);
@@ -644,7 +678,7 @@ void Level::update(double speedMultiplier, GameObject cursor)
 	for (Terrain &terrain : levelGeometry) {
 
 		//Check if the player laser intersects terrain, clip if it does
-		if (playerLaser.checkHit(terrain.basicBox, playerLaser.endPoint)) {
+		if (currentWeapon == LASER && playerLaser.checkHit(terrain.basicBox, playerLaser.endPoint)) {
 			this->intersectionMarkers.push_back(playerLaser.getCollisionPoint(terrain.basicBox));
 			playerLaser.endPoint = playerLaser.getCollisionPoint(terrain.basicBox);
 		}

@@ -1,7 +1,7 @@
 #ifndef WEAPON_H
 #define WEAPON_H
 #include "Projectile.h"
-#include <SDL_mixer.h>
+#include "SDLLibs\SDL2-2.0.5\include\SDL_mixer.h"
 #include <vector>
 #include <iostream>
 using namespace std;
@@ -18,7 +18,7 @@ protected:
 	float initSpawnerX=0, initSpawnerY =0;
 	double currentAngle;
 public:
-	void projDraw();
+	void projDraw(bool debug);
 	bool animatedWeapon = false;
 	int spritesInSet = 1;
 	int currentFrame = 1;

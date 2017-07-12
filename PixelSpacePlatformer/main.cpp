@@ -4,8 +4,8 @@
 #include <windows.h>		
 #include "MainMenu.h"
 #include "Level.h"
-#include <SDL.h>
-#include <SDL_mixer.h>
+#include "SDLLibs\SDL2-2.0.5\include\SDL.h"
+#include "SDLLibs\SDL2-2.0.5\include\SDL_mixer.h"
 #include <vector>
 #include <iostream>
 #include <string>
@@ -36,6 +36,7 @@ void playGame();
 bool startSDLaudio();
 void processKeys();
 int currentState = MAINMENU;
+bool debugMode = false; //Draws bounding boxes and points of intersection
 void init()
 {
 	glEnable(GL_TEXTURE_2D);
@@ -82,7 +83,7 @@ void update()
 	}
 	if (currentState == PLAYING) {
 		currentLevel.setSpeedMulitplier(frameTimeOffset);
-		currentLevel.advanceClock(frameDuration);
+		currentLevel.advanceClock(frameDuration*(targetFramerate /144.0));
 		currentLevel.advanceTicks(frameTimeOffset);
 		processKeys();
 		currentLevel.update(frameTimeOffset,cursor);
@@ -91,13 +92,12 @@ void update()
 }
 void display()
 {	
-	cout << "HI" << endl;
 	glClear(GL_COLOR_BUFFER_BIT);
 	if (currentState == MAINMENU) {
 		menu.drawMenu();
 	}
 	else if (currentState == PLAYING) {
-		currentLevel.draw();
+		currentLevel.draw(debugMode);
 		// HUD
 		glColor3f(0, 0, 0);
 		glBegin(GL_QUADS);

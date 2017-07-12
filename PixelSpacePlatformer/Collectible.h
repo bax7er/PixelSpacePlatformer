@@ -5,7 +5,7 @@
 #define QUADDAMAGE 2
 #define CHECKPOINT 3
 #define OUTOFMAP 4
-#include <SDL_mixer.h>
+#include "SDLLibs\SDL2-2.0.5\include\SDL_mixer.h"
 #include "GameObject.h"
 #include "Effect.h"
 #include "Player.h"

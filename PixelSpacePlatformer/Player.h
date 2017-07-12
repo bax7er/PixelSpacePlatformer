@@ -5,7 +5,7 @@
 #include <vector>
 #include "Image_Loading/nvImage.h"
 #include <iostream>
-#include <SDL_mixer.h>
+#include "SDLLibs\SDL2-2.0.5\include\SDL_mixer.h"
 
 using namespace std;
 class Player : public GameObject{
@@ -15,7 +15,7 @@ protected:
 	float maxJumpTime = 0.8;
 	float currentJumptime=0;
 	float currentFalltime = 0;
-	bool onGround;
+	bool onGround = true;
 	float weaponSpin = 0;
 	int texturePos;
 	float maxJumpHeight;
@@ -103,6 +103,13 @@ public:
 		yAcc = acc;
 	}
 	inline bool isOnGround() {
+		if (onGround)
+		{
+			printf("Player is on ground \n");
+		}
+		else {
+			printf("Player is NOT on ground \n");
+		}
 		return onGround;
 	}
 	inline void setJump(bool state) {

@@ -5,8 +5,11 @@ Mix_Chunk* Collectible::quadDamageSound = NULL;
 Mix_Chunk* Collectible::autoRocketSound = NULL;
 Collectible::Collectible()
 {
+	
 }
 Collectible::Collectible(float spawnXpos, float spawnYpos, float xSize, float ySize, int type): GameObject(spawnXpos, spawnYpos,xSize,ySize) {
+	this->drawable = true;
+	this->active = true;
 	this->type = type;
 	if (type == POINTSPOWERUP) {
 		this->pointsValue = 300;

@@ -13,7 +13,7 @@
 #include "aiPlayer.h"
 #include "MainMenu.h"
 #include "Collectible.h"
-#include <SDL_mixer.h>
+#include "SDLLibs\SDL2-2.0.5\include\SDL_mixer.h"
 #include <iomanip>
 #define ROCKETLAUNCHER 0
 #define LASER 1
@@ -106,7 +106,7 @@ public:
 	// Clears elements from the vectors that are no longer active
 	void cleanUp();
 
-	void draw();
+	void draw(bool debugMode);
 
 	void update(double speedMultiplier,GameObject cursor);
 	void playerAttack(bool isAttack);
