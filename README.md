@@ -4,7 +4,7 @@ Written in C++ and OpenGL
 Using nvImage loader and SDL_mixer for audio
 Audio and image assets used are not my own
 
-## Key Features:
+# Key Features:
 ## Weapon Collision Methods 
 
 ### Projectile
@@ -49,4 +49,31 @@ Hitscan weapons in the game are modelled as follows:
 1. If a collision occurred with a player or AI, damage is applied. As the beam weapon will hit every frame due to no travel time, the damage is a low value multiplied by ΔT.
 	
 	
-	
+## AI Behaviours
+
+ In the game, AI have two set behaviours. One is two remain static. A static AI cannot move, and is not affected by gravity. It is still able to aim and shoot, and is therefore utilised as a &quot;turret mode&quot; in the game.
+
+ The other behaviour is to follow the player. AI using this method are affected by gravity, and, when within a fixed distance, move towards the player in regards to the x axis. They however ignore the player&#39;s movements with respect to the Y axis.
+
+ Both AI behaviours will aim at the player when within a given the range, and will only shoot when a line of sight check is passed. The line of sight check is very similar to the method used for hit scan weapons. A line is drawn between the player and the AI. If this line intersects with level geometry, that AI is unable to shoot. This method however does not try to find the closest intersection point, just whether there is one.
+
+## Power Ups
+
+The game includes 3 power ups. These are collectible items which modify gameplay in some way.
+
+*	Points Power up – Grants the player set number of points (Default 500)
+
+*	Auto Launcher Power Up – Temporally removes the firing delay on the users rocket launcher, allowing the weapon to operate fully automatically
+
+*	Quad damage – Temporally  multiplies the Users weapon damage by 4. Damage for land on an enemy is unchanged.
+
+The players initial values for damage and fire delay are restored after the power up duration.
+
+# User Manual
+Goal: Touch the checkered flag flag to complete the Level!
+Controls:
+*	A – Move Left
+*	D – Move Right
+*	Space – Jump
+*	Left Click – Shoot
+*	Tab – Change weapons
