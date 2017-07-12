@@ -9,10 +9,10 @@ Projectile weapons are used in the game with weapons that have large and/or slow
 This is because fast moving projectiles may be ahead of the target in one frame and behind it in the following frame, leading to a missed collision.
 Projectile based weapons also allow the projectile movement to be seen traveling along its trajectory.
 Projectile weapons in the game are modelled as follows:
-    ⋅⋅*θ Represents the angle the weapon has been rotated
-    ⋅⋅*ΔT Represents a variable used to control the speed of actions within the game
+    *θ Represents the angle the weapon has been rotated
+    *ΔT Represents a variable used to control the speed of actions within the game
 	1 The projectile is created at the weapon muzzle, and a heading vector is generated.
-	 ⋅⋅*Heading vector is generated: (x¦y)=((cos⁡(θ))¦(sin⁡(-θ)))
+	 *Heading vector is generated: (x¦y)=((cos⁡(θ))¦(sin⁡(-θ)))
 	2 The projectile is rotated about its centre θ degrees
 	3 Each frame, the projectile is translated by its heading multiplied by ΔT
 	4 The projectile is then checked against a vector of bounding boxes for level geometry.
