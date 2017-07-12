@@ -9,6 +9,12 @@ Projectile weapons are used in the game with weapons that have large and/or slow
 This is because fast moving projectiles may be ahead of the target in one frame and behind it in the following frame, leading to a missed collision.
 Projectile based weapons also allow the projectile movement to be seen traveling along its trajectory.
 Projectile weapons in the game are modelled as follows:
+1. Item 1
+1. Item 2
+1. Item 3
+   1. Item 3a
+   1. Item 3b
+   
     *θ Represents the angle the weapon has been rotated
     *ΔT Represents a variable used to control the speed of actions within the game
 	1. The projectile is created at the weapon muzzle, and a heading vector is generated.
