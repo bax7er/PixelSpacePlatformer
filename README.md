@@ -1,5 +1,6 @@
 # PixelSpacePlatformer
-Project for Graphics 1 module.  
+PLEASE NOTE THAT MANY ASSETS ARE NOT DESIGNED FOR x64, PLEASE TARGET x86
+
 Written in C++ and OpenGL.  
 Using nvImage loader and SDL_mixer for audio.  
 Audio and image assets used are not my own.  
