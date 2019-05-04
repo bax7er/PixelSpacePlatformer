@@ -1,0 +1,58 @@
+**Start of Textures**
+$T default.png
+$T D:\Dropbox\C++\Graphics1LevelEditor\assets\textures\dirt.png
+$T D:\Dropbox\C++\Graphics1LevelEditor\assets\textures\blank.png
+$T D:\Dropbox\C++\Graphics1LevelEditor\assets\textures\marioBackground.png
+$T D:\Dropbox\C++\Graphics1LevelEditor\assets\textures\grassCover.png
+$T D:\Dropbox\C++\Graphics1LevelEditor\assets\textures\koopa.png
+$T D:\Dropbox\C++\Graphics1LevelEditor\assets\textures\qMark.png
+$T D:\Dropbox\C++\Graphics1LevelEditor\assets\textures\goldCoin.png
+$T D:\Dropbox\C++\Graphics1LevelEditor\assets\textures\dirtEdge.png
+**Start of Unknown Elements**
+$M assets/music/marioOverworld.ogg
+$A 1.5,0.14, 0.2, 0.2,5,8,1000,1.0,1.0,1.0,1,0,1,1
+$AW AI_RocketLauncher
+$A 1.7,0.14, 0.2, 0.2,5,8,1000,1.0,1.0,1.0,1,0,1,1
+$AW AI_Unarmed
+$A 1.9,0.14, 0.2, 0.2,5,8,1000,1.0,1.0,1.0,1,0,1,1
+$AW AI_TurretLaser
+$P 3.3,0.4, 0.1, 0.1,0,7
+$P 3.5,0.4, 0.1, 0.1,0,7
+$P 3.7,0.4, 0.1, 0.1,0,7
+**Start of Geometry**
+$G 1.47031,-1.21935,10.4566,1.33335,1
+$GR 0,25.6947,12.7222
+$G -1.65023,0.917733,0.724296,3.82901,2
+$GR 1,1,1
+$G 1.90618,3.21008e-05,1.32604,0.0517381,4
+$GR 2,3,1
+$G 3.5,0.2,0.34961,0.1,6
+$GR 3,3,1
+$G 7.03822,-1.12812,0.698991,1.83799,1
+$GR 4,1.50211,16.8998
+$G 7.63969,-0.913289,0.508138,2.5147,1
+$GR 5,-0.755132,-33.7069
+$G 8.95808,-0.642334,2.19388,3.03118,1
+$GR 6,2.15351,41.879
+**Start of foreground**
+$F 1.27882,-0.577451,10.8689,0.0496126,4
+$FR 0,31.6428,1
+$F 7.04147,-0.225442,0.719251,0.0520519,4
+$FR 1,1.60211,1
+$F 7.62391,0.325962,0.488565,0.0368524,4
+$FR 2,1.5014,1
+$F 8.96327,0.852564,2.20379,0.0621849,4
+$FR 3,6.76704,1
+**Start of background**
+$B -2.72355,-2.297,0.673936,0.74414,0
+$BR 0,1,1
+$B 3.13808,0.656555,14.0733,2.85361,3
+$BR 1,7.96855,1
+$B 1.90605,-0.286026,1.32652,0.598593,1
+$BR 2,2.15383,6.8687
+$B 2.55311,-0.295876,-0.0427801,0.558403,8
+$BR 3,1,5.66198
+$B 1.26439,-0.325956,0.0420965,0.689052,8
+$BR 4,1,5.81379
+**Start of Effects**
+**END OF FILE**
