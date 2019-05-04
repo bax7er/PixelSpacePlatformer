@@ -1,4 +1,6 @@
 # PixelSpacePlatformer
+This is an older project, last updated 2017
+The quailty of this work does not reflect my current ability, and I hope to be revisting this project in the near future
 PLEASE NOTE THAT MANY ASSETS ARE NOT DESIGNED FOR x64, PLEASE TARGET x86
 
 Written in C++ and OpenGL.  
