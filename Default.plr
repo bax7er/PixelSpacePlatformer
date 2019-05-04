@@ -1,7 +1,0 @@
-0.2 #height
-0.2 #width
-assets/textures/Player.png#texture
-assets/textures/playerShield.png#Shieldtexture
-1000 #startingHP
-11 #spritesOnSheet
-0.8 #maxJumpTime
